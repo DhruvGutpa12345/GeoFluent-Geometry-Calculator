@@ -439,11 +439,11 @@ class App {
   }
 
   setupVisualizers() {
-    const container = document.getElementById('visualizer-container');
-    const toolbar = document.getElementById('visualizer-toolbar');
+    const container2D = document.getElementById('visualizer-2d-container');
+    const container3D = document.getElementById('visualizer-3d-container');
 
-    this.visualizer2D = new Visualizer2D(container);
-    this.visualizer3D = new Visualizer3D(container);
+    this.visualizer2D = new Visualizer2D(container2D);
+    this.visualizer3D = new Visualizer3D(container3D);
 
     // Initial toolbar setup
     this.updateVisualizerToolbar();
@@ -502,22 +502,24 @@ class App {
     const titleEl = document.getElementById('visualizer-title');
     this.updateVisualizerToolbar();
 
+    const container2D = document.getElementById('visualizer-2d-container');
+    const container3D = document.getElementById('visualizer-3d-container');
+
     if (this.currentMode === '2d') {
       titleEl.textContent = 'Live 2D Diagram & Scaling';
-      if (this.visualizer3D.renderer && this.visualizer3D.renderer.domElement.parentNode) {
-        this.visualizer3D.renderer.domElement.style.display = 'none';
+      if (container3D) container3D.style.display = 'none';
+      if (container2D) {
+        container2D.style.display = 'flex';
+        this.visualizer2D.render(result.svgData);
       }
-      this.visualizer2D.render(result.svgData);
     } else {
       titleEl.textContent = 'Interactive 3D Solid (Drag to Rotate, Scroll to Zoom)';
-      const container = document.getElementById('visualizer-container');
-      const svg = container.querySelector('svg');
-      if (svg) svg.remove();
-
-      if (this.visualizer3D.renderer) {
-        this.visualizer3D.renderer.domElement.style.display = 'block';
+      if (container2D) container2D.style.display = 'none';
+      if (container3D) {
+        container3D.style.display = 'block';
+        this.visualizer3D.resize();
+        this.visualizer3D.render(result.threeData);
       }
-      this.visualizer3D.render(result.threeData);
     }
   }
 
@@ -577,13 +579,44 @@ class App {
 
   setupTheme() {
     const themeBtns = document.querySelectorAll('[data-theme-btn]');
+
+    const applyTheme = (theme) => {
+      if (theme === 'system') {
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        document.body.dataset.theme = prefersDark ? 'dark' : 'light';
+      } else {
+        document.body.dataset.theme = theme;
+      }
+    };
+
+    // System theme live listener
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+      const settings = Store.getSettings();
+      if (settings.theme === 'system') {
+        document.body.dataset.theme = e.matches ? 'dark' : 'light';
+      }
+    });
+
+    const settings = Store.getSettings();
+    const currentTheme = settings.theme || 'system';
+    applyTheme(currentTheme);
+
     themeBtns.forEach(btn => {
+      if (btn.dataset.themeBtn === currentTheme) {
+        btn.classList.add('active');
+      } else {
+        btn.classList.remove('active');
+      }
+
       btn.addEventListener('click', () => {
         themeBtns.forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         const theme = btn.dataset.themeBtn;
-        document.body.dataset.theme = theme;
-        this.showToast(`Switched to ${theme} theme`);
+        applyTheme(theme);
+        settings.theme = theme;
+        Store.saveSettings(settings);
+        const name = theme === 'system' ? 'System Default' : (theme.charAt(0).toUpperCase() + theme.slice(1));
+        this.showToast(`Switched to ${name} theme`);
       });
     });
   }

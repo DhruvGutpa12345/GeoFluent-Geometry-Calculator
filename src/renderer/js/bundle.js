@@ -15471,6 +15471,82 @@
       return new _TorusGeometry(data.radius, data.tube, data.radialSegments, data.tubularSegments, data.arc, data.thetaStart, data.thetaLength);
     }
   };
+  var WireframeGeometry = class extends BufferGeometry {
+    /**
+     * Constructs a new wireframe geometry.
+     *
+     * @param {?BufferGeometry} [geometry=null] - The geometry.
+     */
+    constructor(geometry = null) {
+      super();
+      this.type = "WireframeGeometry";
+      this.parameters = {
+        geometry
+      };
+      if (geometry !== null) {
+        const vertices = [];
+        const edges = /* @__PURE__ */ new Set();
+        const start = new Vector3();
+        const end = new Vector3();
+        if (geometry.index !== null) {
+          const position = geometry.attributes.position;
+          const indices = geometry.index;
+          let groups = geometry.groups;
+          if (groups.length === 0) {
+            groups = [{ start: 0, count: indices.count, materialIndex: 0 }];
+          }
+          for (let o = 0, ol = groups.length; o < ol; ++o) {
+            const group = groups[o];
+            const groupStart = group.start;
+            const groupCount = group.count;
+            for (let i = groupStart, l = groupStart + groupCount; i < l; i += 3) {
+              for (let j = 0; j < 3; j++) {
+                const index1 = indices.getX(i + j);
+                const index2 = indices.getX(i + (j + 1) % 3);
+                start.fromBufferAttribute(position, index1);
+                end.fromBufferAttribute(position, index2);
+                if (isUniqueEdge(start, end, edges) === true) {
+                  vertices.push(start.x, start.y, start.z);
+                  vertices.push(end.x, end.y, end.z);
+                }
+              }
+            }
+          }
+        } else {
+          const position = geometry.attributes.position;
+          for (let i = 0, l = position.count / 3; i < l; i++) {
+            for (let j = 0; j < 3; j++) {
+              const index1 = 3 * i + j;
+              const index2 = 3 * i + (j + 1) % 3;
+              start.fromBufferAttribute(position, index1);
+              end.fromBufferAttribute(position, index2);
+              if (isUniqueEdge(start, end, edges) === true) {
+                vertices.push(start.x, start.y, start.z);
+                vertices.push(end.x, end.y, end.z);
+              }
+            }
+          }
+        }
+        this.setAttribute("position", new Float32BufferAttribute(vertices, 3));
+      }
+    }
+    copy(source) {
+      super.copy(source);
+      this.parameters = Object.assign({}, source.parameters);
+      return this;
+    }
+  };
+  function isUniqueEdge(start, end, edges) {
+    const hash1 = `${start.x},${start.y},${start.z}-${end.x},${end.y},${end.z}`;
+    const hash2 = `${end.x},${end.y},${end.z}-${start.x},${start.y},${start.z}`;
+    if (edges.has(hash1) === true || edges.has(hash2) === true) {
+      return false;
+    } else {
+      edges.add(hash1);
+      edges.add(hash2);
+      return true;
+    }
+  }
   function cloneUniforms(src) {
     const dst = {};
     for (const u in src) {
@@ -15809,226 +15885,6 @@
       this.wireframeLinejoin = source.wireframeLinejoin;
       this.flatShading = source.flatShading;
       this.fog = source.fog;
-      return this;
-    }
-  };
-  var MeshPhysicalMaterial = class extends MeshStandardMaterial {
-    /**
-     * Constructs a new mesh physical material.
-     *
-     * @param {Object} [parameters] - An object with one or more properties
-     * defining the material's appearance. Any property of the material
-     * (including any property from inherited materials) can be passed
-     * in here. Color values can be passed any type of value accepted
-     * by {@link Color#set}.
-     */
-    constructor(parameters) {
-      super();
-      this.isMeshPhysicalMaterial = true;
-      this.defines = {
-        "STANDARD": "",
-        "PHYSICAL": ""
-      };
-      this.type = "MeshPhysicalMaterial";
-      this.anisotropyRotation = 0;
-      this.anisotropyMap = null;
-      this.clearcoatMap = null;
-      this.clearcoatRoughness = 0;
-      this.clearcoatRoughnessMap = null;
-      this.clearcoatNormalScale = new Vector2(1, 1);
-      this.clearcoatNormalMap = null;
-      this.ior = 1.5;
-      Object.defineProperty(this, "reflectivity", {
-        get: function() {
-          return clamp(2.5 * (this.ior - 1) / (this.ior + 1), 0, 1);
-        },
-        set: function(reflectivity) {
-          this.ior = (1 + 0.4 * reflectivity) / (1 - 0.4 * reflectivity);
-        }
-      });
-      this.iridescenceMap = null;
-      this.iridescenceIOR = 1.3;
-      this.iridescenceThicknessRange = [100, 400];
-      this.iridescenceThicknessMap = null;
-      this.sheenColor = new Color(0);
-      this.sheenColorMap = null;
-      this.sheenRoughness = 1;
-      this.sheenRoughnessMap = null;
-      this.transmissionMap = null;
-      this.thickness = 0;
-      this.thicknessMap = null;
-      this.attenuationDistance = Infinity;
-      this.attenuationColor = new Color(1, 1, 1);
-      this.specularIntensity = 1;
-      this.specularIntensityMap = null;
-      this.specularColor = new Color(1, 1, 1);
-      this.specularColorMap = null;
-      this._anisotropy = 0;
-      this._clearcoat = 0;
-      this._dispersion = 0;
-      this._iridescence = 0;
-      this._retroreflectivity = 0;
-      this._sheen = 0;
-      this._transmission = 0;
-      this.setValues(parameters);
-    }
-    /**
-     * The anisotropy strength, from `0.0` to `1.0`.
-     *
-     * @type {number}
-     * @default 0
-     */
-    get anisotropy() {
-      return this._anisotropy;
-    }
-    set anisotropy(value) {
-      if (this._anisotropy > 0 !== value > 0) {
-        this.version++;
-      }
-      this._anisotropy = value;
-    }
-    /**
-     * Represents the intensity of the clear coat layer, from `0.0` to `1.0`. Use
-     * clear coat related properties to enable multilayer materials that have a
-     * thin translucent layer over the base layer.
-     *
-     * @type {number}
-     * @default 0
-     */
-    get clearcoat() {
-      return this._clearcoat;
-    }
-    set clearcoat(value) {
-      if (this._clearcoat > 0 !== value > 0) {
-        this.version++;
-      }
-      this._clearcoat = value;
-    }
-    /**
-     * The intensity of the iridescence layer, simulating RGB color shift based on the angle between
-     * the surface and the viewer, from `0.0` to `1.0`.
-     *
-     * @type {number}
-     * @default 0
-     */
-    get iridescence() {
-      return this._iridescence;
-    }
-    set iridescence(value) {
-      if (this._iridescence > 0 !== value > 0) {
-        this.version++;
-      }
-      this._iridescence = value;
-    }
-    /**
-     * Defines the strength of the angular separation of colors (chromatic aberration) transmitting
-     * through a relatively clear volume. Any value zero or larger is valid, the typical range of
-     * realistic values is `[0, 1]`. This property can be only be used with transmissive objects.
-     *
-     * @type {number}
-     * @default 0
-     */
-    get dispersion() {
-      return this._dispersion;
-    }
-    set dispersion(value) {
-      if (this._dispersion > 0 !== value > 0) {
-        this.version++;
-      }
-      this._dispersion = value;
-    }
-    /**
-     * The strength of retroreflection, from `0.0` to `1.0`. A value of `1.0`
-     * evaluates the material's microfacet reflection with the view direction
-     * reflected about the surface normal, redirecting the specular lobe back
-     * toward the light source.
-     *
-     * @type {number}
-     * @default 0
-     */
-    get retroreflectivity() {
-      return this._retroreflectivity;
-    }
-    set retroreflectivity(value) {
-      if (this._retroreflectivity > 0 !== value > 0) {
-        this.version++;
-      }
-      this._retroreflectivity = value;
-    }
-    /**
-     * The intensity of the sheen layer, from `0.0` to `1.0`.
-     *
-     * @type {number}
-     * @default 0
-     */
-    get sheen() {
-      return this._sheen;
-    }
-    set sheen(value) {
-      if (this._sheen > 0 !== value > 0) {
-        this.version++;
-      }
-      this._sheen = value;
-    }
-    /**
-     * Degree of transmission (or optical transparency), from `0.0` to `1.0`.
-     *
-     * Thin, transparent or semitransparent, plastic or glass materials remain
-     * largely reflective even if they are fully transmissive. The transmission
-     * property can be used to model these materials.
-     *
-     * When transmission is non-zero, `opacity` should be  set to `1`.
-     *
-     * @type {number}
-     * @default 0
-     */
-    get transmission() {
-      return this._transmission;
-    }
-    set transmission(value) {
-      if (this._transmission > 0 !== value > 0) {
-        this.version++;
-      }
-      this._transmission = value;
-    }
-    copy(source) {
-      super.copy(source);
-      this.defines = {
-        "STANDARD": "",
-        "PHYSICAL": ""
-      };
-      this.anisotropy = source.anisotropy;
-      this.anisotropyRotation = source.anisotropyRotation;
-      this.anisotropyMap = source.anisotropyMap;
-      this.clearcoat = source.clearcoat;
-      this.clearcoatMap = source.clearcoatMap;
-      this.clearcoatRoughness = source.clearcoatRoughness;
-      this.clearcoatRoughnessMap = source.clearcoatRoughnessMap;
-      this.clearcoatNormalMap = source.clearcoatNormalMap;
-      this.clearcoatNormalScale.copy(source.clearcoatNormalScale);
-      this.dispersion = source.dispersion;
-      this.ior = source.ior;
-      this.iridescence = source.iridescence;
-      this.iridescenceMap = source.iridescenceMap;
-      this.iridescenceIOR = source.iridescenceIOR;
-      this.iridescenceThicknessRange = [...source.iridescenceThicknessRange];
-      this.iridescenceThicknessMap = source.iridescenceThicknessMap;
-      this.retroreflectivity = source.retroreflectivity;
-      this.sheen = source.sheen;
-      this.sheenColor.copy(source.sheenColor);
-      this.sheenColorMap = source.sheenColorMap;
-      this.sheenRoughness = source.sheenRoughness;
-      this.sheenRoughnessMap = source.sheenRoughnessMap;
-      this.transmission = source.transmission;
-      this.transmissionMap = source.transmissionMap;
-      this.thickness = source.thickness;
-      this.thicknessMap = source.thicknessMap;
-      this.attenuationDistance = source.attenuationDistance;
-      this.attenuationColor.copy(source.attenuationColor);
-      this.specularIntensity = source.specularIntensity;
-      this.specularIntensityMap = source.specularIntensityMap;
-      this.specularColor.copy(source.specularColor);
-      this.specularColorMap = source.specularColorMap;
       return this;
     }
   };
@@ -30154,6 +30010,9 @@ void main() {
       this.renderer.shadowMap.enabled = true;
       this.renderer.shadowMap.type = PCFShadowMap;
       this.container.innerHTML = "";
+      this.renderer.domElement.style.width = "100%";
+      this.renderer.domElement.style.height = "100%";
+      this.renderer.domElement.style.display = "block";
       this.container.appendChild(this.renderer.domElement);
       const ambientLight = new AmbientLight(16777215, 0.7);
       this.scene.add(ambientLight);
@@ -30222,15 +30081,19 @@ void main() {
         });
       }
     }
-    resetView() {
-      this.camera.position.set(20, 15, 25);
-      this.camera.lookAt(0, 0, 0);
-      if (this.currentMeshGroup) {
-        this.currentMeshGroup.rotation.set(0, 0, 0);
+    resize() {
+      if (!this.container || !this.renderer || !this.camera) return;
+      const width = this.container.clientWidth || 400;
+      const height = this.container.clientHeight || 300;
+      if (width > 0 && height > 0) {
+        this.camera.aspect = width / height;
+        this.camera.updateProjectionMatrix();
+        this.renderer.setSize(width, height);
       }
     }
     render(threeData) {
       if (!this.scene) return;
+      this.resize();
       if (this.currentMeshGroup) {
         this.scene.remove(this.currentMeshGroup);
         this.currentMeshGroup.traverse((child) => {
@@ -30358,12 +30221,13 @@ void main() {
       solidMesh.castShadow = true;
       solidMesh.receiveShadow = true;
       this.currentMeshGroup.add(solidMesh);
-      const wireGeom = new EdgesGeometry(geometry, 25);
+      const isPoly = threeData.type === "cube" || threeData.type === "cuboid" || threeData.type === "pyramid" || threeData.type === "prism";
+      const wireGeom = isPoly ? new EdgesGeometry(geometry, 15) : new WireframeGeometry(geometry);
       const wireMat = new LineBasicMaterial({
         color: 6344191,
         linewidth: 1.5,
         transparent: true,
-        opacity: 0.85
+        opacity: isPoly ? 0.9 : 0.35
       });
       const wireMesh = new LineSegments(wireGeom, wireMat);
       wireMesh.visible = this.showWireframe;
@@ -30371,17 +30235,11 @@ void main() {
       this.scene.add(this.currentMeshGroup);
     }
     _createSolidMaterial() {
-      return new MeshPhysicalMaterial({
+      return new MeshStandardMaterial({
         color: 30932,
-        emissive: 7485,
-        roughness: 0.15,
-        metalness: 0.1,
-        transmission: 0.4,
-        transparent: true,
-        opacity: 0.88,
-        reflectivity: 0.8,
-        clearcoat: 0.6,
-        clearcoatRoughness: 0.1,
+        emissive: 6709,
+        roughness: 0.25,
+        metalness: 0.25,
         side: DoubleSide
       });
     }
@@ -30856,10 +30714,10 @@ void main() {
       }
     }
     setupVisualizers() {
-      const container = document.getElementById("visualizer-container");
-      const toolbar = document.getElementById("visualizer-toolbar");
-      this.visualizer2D = new Visualizer2D(container);
-      this.visualizer3D = new Visualizer3D(container);
+      const container2D = document.getElementById("visualizer-2d-container");
+      const container3D = document.getElementById("visualizer-3d-container");
+      this.visualizer2D = new Visualizer2D(container2D);
+      this.visualizer3D = new Visualizer3D(container3D);
       this.updateVisualizerToolbar();
     }
     updateVisualizerToolbar() {
@@ -30909,21 +30767,23 @@ void main() {
     updateVisualizer(result) {
       const titleEl = document.getElementById("visualizer-title");
       this.updateVisualizerToolbar();
+      const container2D = document.getElementById("visualizer-2d-container");
+      const container3D = document.getElementById("visualizer-3d-container");
       if (this.currentMode === "2d") {
         titleEl.textContent = "Live 2D Diagram & Scaling";
-        if (this.visualizer3D.renderer && this.visualizer3D.renderer.domElement.parentNode) {
-          this.visualizer3D.renderer.domElement.style.display = "none";
+        if (container3D) container3D.style.display = "none";
+        if (container2D) {
+          container2D.style.display = "flex";
+          this.visualizer2D.render(result.svgData);
         }
-        this.visualizer2D.render(result.svgData);
       } else {
         titleEl.textContent = "Interactive 3D Solid (Drag to Rotate, Scroll to Zoom)";
-        const container = document.getElementById("visualizer-container");
-        const svg = container.querySelector("svg");
-        if (svg) svg.remove();
-        if (this.visualizer3D.renderer) {
-          this.visualizer3D.renderer.domElement.style.display = "block";
+        if (container2D) container2D.style.display = "none";
+        if (container3D) {
+          container3D.style.display = "block";
+          this.visualizer3D.resize();
+          this.visualizer3D.render(result.threeData);
         }
-        this.visualizer3D.render(result.threeData);
       }
     }
     setupUnitConverter() {
@@ -30972,13 +30832,38 @@ void main() {
     }
     setupTheme() {
       const themeBtns = document.querySelectorAll("[data-theme-btn]");
+      const applyTheme = (theme) => {
+        if (theme === "system") {
+          const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+          document.body.dataset.theme = prefersDark ? "dark" : "light";
+        } else {
+          document.body.dataset.theme = theme;
+        }
+      };
+      window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", (e) => {
+        const settings2 = Store.getSettings();
+        if (settings2.theme === "system") {
+          document.body.dataset.theme = e.matches ? "dark" : "light";
+        }
+      });
+      const settings = Store.getSettings();
+      const currentTheme = settings.theme || "system";
+      applyTheme(currentTheme);
       themeBtns.forEach((btn) => {
+        if (btn.dataset.themeBtn === currentTheme) {
+          btn.classList.add("active");
+        } else {
+          btn.classList.remove("active");
+        }
         btn.addEventListener("click", () => {
           themeBtns.forEach((b) => b.classList.remove("active"));
           btn.classList.add("active");
           const theme = btn.dataset.themeBtn;
-          document.body.dataset.theme = theme;
-          this.showToast(`Switched to ${theme} theme`);
+          applyTheme(theme);
+          settings.theme = theme;
+          Store.saveSettings(settings);
+          const name = theme === "system" ? "System Default" : theme.charAt(0).toUpperCase() + theme.slice(1);
+          this.showToast(`Switched to ${name} theme`);
         });
       });
     }

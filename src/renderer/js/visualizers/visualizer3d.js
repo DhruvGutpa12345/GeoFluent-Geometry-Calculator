@@ -53,6 +53,9 @@ export class Visualizer3D {
     this.renderer.shadowMap.type = THREE.PCFShadowMap;
 
     this.container.innerHTML = '';
+    this.renderer.domElement.style.width = '100%';
+    this.renderer.domElement.style.height = '100%';
+    this.renderer.domElement.style.display = 'block';
     this.container.appendChild(this.renderer.domElement);
 
     // 4. Lights
@@ -144,16 +147,20 @@ export class Visualizer3D {
     }
   }
 
-  resetView() {
-    this.camera.position.set(20, 15, 25);
-    this.camera.lookAt(0, 0, 0);
-    if (this.currentMeshGroup) {
-      this.currentMeshGroup.rotation.set(0, 0, 0);
+  resize() {
+    if (!this.container || !this.renderer || !this.camera) return;
+    const width = this.container.clientWidth || 400;
+    const height = this.container.clientHeight || 300;
+    if (width > 0 && height > 0) {
+      this.camera.aspect = width / height;
+      this.camera.updateProjectionMatrix();
+      this.renderer.setSize(width, height);
     }
   }
 
   render(threeData) {
     if (!this.scene) return;
+    this.resize();
 
     // Remove previous mesh
     if (this.currentMeshGroup) {
@@ -293,12 +300,13 @@ export class Visualizer3D {
     this.currentMeshGroup.add(solidMesh);
 
     // 2. Wireframe / Edge Highlight
-    const wireGeom = new THREE.EdgesGeometry(geometry, 25);
+    const isPoly = (threeData.type === 'cube' || threeData.type === 'cuboid' || threeData.type === 'pyramid' || threeData.type === 'prism');
+    const wireGeom = isPoly ? new THREE.EdgesGeometry(geometry, 15) : new THREE.WireframeGeometry(geometry);
     const wireMat = new THREE.LineBasicMaterial({
       color: 0x60cdff,
       linewidth: 1.5,
       transparent: true,
-      opacity: 0.85
+      opacity: isPoly ? 0.9 : 0.35
     });
     const wireMesh = new THREE.LineSegments(wireGeom, wireMat);
     wireMesh.visible = this.showWireframe;
@@ -308,17 +316,11 @@ export class Visualizer3D {
   }
 
   _createSolidMaterial() {
-    return new THREE.MeshPhysicalMaterial({
+    return new THREE.MeshStandardMaterial({
       color: 0x0078d4,
-      emissive: 0x001d3d,
-      roughness: 0.15,
-      metalness: 0.1,
-      transmission: 0.4,
-      transparent: true,
-      opacity: 0.88,
-      reflectivity: 0.8,
-      clearcoat: 0.6,
-      clearcoatRoughness: 0.1,
+      emissive: 0x001a35,
+      roughness: 0.25,
+      metalness: 0.25,
       side: THREE.DoubleSide
     });
   }
