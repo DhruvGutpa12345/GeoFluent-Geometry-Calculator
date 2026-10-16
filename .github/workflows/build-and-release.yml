@@ -38,6 +38,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          npm run bundle
           npx electron-builder --win nsis portable msi appx
 
       - name: Upload Build Artifacts

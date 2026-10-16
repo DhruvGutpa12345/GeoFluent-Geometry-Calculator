@@ -4,7 +4,7 @@
  * interactive orbital controls, lighting, wireframe overlay, and dynamic geometric mesh generation.
  */
 
-import * as THREE from '../lib/three.module.js';
+import * as THREE from 'three';
 
 export class Visualizer3D {
   constructor(containerElement) {
@@ -50,7 +50,7 @@ export class Visualizer3D {
     this.renderer.setSize(width, height);
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     this.renderer.shadowMap.enabled = true;
-    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    this.renderer.shadowMap.type = THREE.PCFShadowMap;
 
     this.container.innerHTML = '';
     this.container.appendChild(this.renderer.domElement);

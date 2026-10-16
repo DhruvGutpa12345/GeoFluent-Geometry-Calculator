@@ -11,11 +11,12 @@
     "url": "https://github.com/DhruvGutpa12345/GeoFluent-Geometry-Calculator.git"
   },
   "scripts": {
-    "start": "electron .",
-    "build": "electron-builder --win",
-    "pack:exe": "electron-builder --win nsis portable",
-    "pack:msi": "electron-builder --win msi",
-    "pack:appx": "electron-builder --win appx"
+    "bundle": "esbuild src/renderer/js/app.js --bundle --outfile=src/renderer/js/bundle.js --format=iife --platform=browser",
+    "start": "npm run bundle && electron .",
+    "build": "npm run bundle && electron-builder --win",
+    "pack:exe": "npm run bundle && electron-builder --win nsis portable",
+    "pack:msi": "npm run bundle && electron-builder --win msi",
+    "pack:appx": "npm run bundle && electron-builder --win appx"
   },
   "build": {
     "appId": "com.dhruvgupta.geofluent",
@@ -66,6 +67,7 @@
   },
   "devDependencies": {
     "electron": "^44.8.0",
-    "electron-builder": "^26.15.3"
+    "electron-builder": "^26.15.3",
+    "esbuild": "^0.28.2"
   }
 }

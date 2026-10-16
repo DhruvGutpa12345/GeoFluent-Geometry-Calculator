@@ -730,7 +730,15 @@ class App {
   }
 }
 
-// Instantiate on DOM load
-window.addEventListener('DOMContentLoaded', () => {
+// Instantiate immediately if DOM already loaded, or wait for DOMContentLoaded
+console.log('app.js evaluated, document.readyState:', document.readyState);
+if (document.readyState === 'loading') {
+  window.addEventListener('DOMContentLoaded', () => {
+    console.log('DOMContentLoaded fired, instantiating App');
+    new App();
+  });
+} else {
+  console.log('DOM already loaded, instantiating App immediately');
   new App();
-});
+}
+

@@ -28,6 +28,10 @@ function createWindow() {
     }
   });
 
+  mainWindow.webContents.on('console-message', (event, level, message, line, sourceId) => {
+    console.log(`[RENDERER LOG ${level}] ${message} (${sourceId}:${line})`);
+  });
+
   mainWindow.loadFile(path.join(__dirname, '../renderer/index.html'));
 
   // Window IPC controls
