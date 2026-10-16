@@ -1,0 +1,64 @@
+name: Build & Package GeoFluent for Windows 11
+
+on:
+  push:
+    branches: [ main ]
+    tags:
+      - 'v*'
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Generate High-Resolution Icons & Store Assets
+        shell: powershell
+        run: |
+          powershell -ExecutionPolicy Bypass -File scripts\Run-Builder.ps1
+
+      - name: Build Windows Packages (EXE, MSI, MSIX/APPX)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          npx electron-builder --win nsis portable msi appx
+
+      - name: Upload Build Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: GeoFluent-Windows-Packages
+          path: |
+            dist/*.exe
+            dist/*.msi
+            dist/*.appx
+            dist/*.msix
+
+      - name: Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/*.exe
+            dist/*.msi
+            dist/*.appx
+            dist/*.msix
+          draft: false
+          prerelease: false
+          generate_release_notes: true

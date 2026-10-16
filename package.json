@@ -1,0 +1,71 @@
+{
+  "name": "geofluent-geometry-calculator",
+  "productName": "GeoFluent",
+  "version": "1.0.0",
+  "description": "High-precision Fluent 2 Geometry Calculator for Windows 11 with interactive 2D diagrams, 3D WebGL solids, and unit conversions.",
+  "main": "src/main/main.js",
+  "author": "Dhruv Gupta",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/DhruvGutpa12345/GeoFluent-Geometry-Calculator.git"
+  },
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder --win",
+    "pack:exe": "electron-builder --win nsis portable",
+    "pack:msi": "electron-builder --win msi",
+    "pack:appx": "electron-builder --win appx"
+  },
+  "build": {
+    "appId": "com.dhruvgupta.geofluent",
+    "productName": "GeoFluent",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "src/**/*",
+      "assets/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        "nsis",
+        "portable",
+        "msi",
+        "appx"
+      ],
+      "icon": "assets/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "GeoFluent Geometry Calculator",
+      "artifactName": "GeoFluent-Setup-${version}.${ext}"
+    },
+    "portable": {
+      "artifactName": "GeoFluent-Portable-${version}.${ext}"
+    },
+    "msi": {
+      "artifactName": "GeoFluent-${version}.${ext}",
+      "warningsAsErrors": false
+    },
+    "appx": {
+      "identityName": "DhruvGupta.GeoFluentGeometryCalculator",
+      "publisher": "CN=DhruvGupta",
+      "publisherDisplayName": "Dhruv Gupta",
+      "applicationId": "GeoFluent",
+      "displayName": "GeoFluent Geometry Calculator",
+      "artifactName": "GeoFluent-${version}.${ext}"
+    }
+  },
+  "dependencies": {
+    "three": "^0.186.1"
+  },
+  "devDependencies": {
+    "electron": "^44.8.0",
+    "electron-builder": "^26.15.3"
+  }
+}

@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GeoFluent - Geometry Calculator for Windows 11</title>
+  <link rel="stylesheet" href="styles/fluent.css">
+</head>
+<body data-theme="dark">
+
+  <!-- Windows 11 Custom Titlebar -->
+  <header class="titlebar" id="titlebar">
+    <div class="titlebar-title">
+      <svg class="titlebar-icon" viewBox="0 0 24 24" fill="none" stroke="#60CDFF" stroke-width="2">
+        <polygon points="12 2 2 22 22 22 12 2"></polygon>
+      </svg>
+      <span>GeoFluent Geometry Calculator</span>
+    </div>
+    <div class="window-controls">
+      <button class="win-btn" id="btn-minimize" title="Minimize">
+        <svg width="10" height="1" viewBox="0 0 10 1"><path fill="currentColor" d="M0 0h10v1H0z"/></svg>
+      </button>
+      <button class="win-btn" id="btn-maximize" title="Maximize">
+        <svg width="10" height="10" viewBox="0 0 10 10"><path fill="none" stroke="currentColor" stroke-width="1" d="M.5.5h9v9h-9z"/></svg>
+      </button>
+      <button class="win-btn close" id="btn-close" title="Close">
+        <svg width="10" height="10" viewBox="0 0 10 10"><path fill="none" stroke="currentColor" stroke-width="1.2" d="M1 1l8 8m0-8L1 9"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <div class="app-container">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+      <div class="nav-header">Geometry Modes</div>
+      <div class="nav-item active" data-tab="2d">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polygon points="12 2 2 22 22 22 12 2"/></svg>
+        <span>2D Plane Shapes</span>
+      </div>
+      <div class="nav-item" data-tab="3d">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+        <span>3D Solid Solids</span>
+      </div>
+
+      <div class="nav-header" style="margin-top: 12px;">Tools & History</div>
+      <div class="nav-item" data-tab="converter">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M7 16V4m0 0L3 8m4-4l4 4m6 4v12m0 0l4-4m-4 4l-4-4"/></svg>
+        <span>Unit Converter</span>
+      </div>
+      <div class="nav-item" data-tab="history">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        <span>Saved History</span>
+      </div>
+
+      <div class="sidebar-spacer"></div>
+
+      <div class="nav-item" data-tab="settings">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        <span>Settings & About</span>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+
+      <!-- GEOMETRY CALCULATOR VIEW (2D & 3D) -->
+      <section id="view-calculator" class="view-panel" style="display: flex; flex-direction: column; height: 100%;">
+        <!-- View Header -->
+        <div class="view-header">
+          <div class="view-title-group">
+            <h1 id="shape-heading">Triangle</h1>
+            <p id="shape-desc">Calculate perimeter, area, heights, and all angles using different methods.</p>
+          </div>
+          <div style="display: flex; gap: 8px;">
+            <button class="fluent-icon-btn" id="btn-copy-report" title="Copy full report to clipboard">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              <span>Copy Report</span>
+            </button>
+            <button class="fluent-icon-btn" id="btn-save-calc" title="Save this calculation to history">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+              <span>Save</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Shape Selector Pill Carousel -->
+        <div class="shapes-scroll-container" id="shapes-pill-container">
+          <!-- Dynamically filled with pills -->
+        </div>
+
+        <!-- Split Workspace Area -->
+        <div class="workspace-grid">
+          <!-- Left Column: Inputs & Calculations -->
+          <div style="display: flex; flex-direction: column; gap: 16px;">
+            
+            <!-- Method Card -->
+            <div class="fluent-card">
+              <div class="method-select-container">
+                <label class="input-label" for="method-selector">Calculation Method</label>
+                <select id="method-selector" class="fluent-select"></select>
+                <div id="method-desc" style="font-size: 12px; color: var(--text-secondary); margin-top: 2px;"></div>
+              </div>
+
+              <!-- Input Parameters Grid -->
+              <div class="param-input-group">
+                <label class="input-label">Parameters & Units</label>
+                <div id="inputs-container" class="parameters-grid">
+                  <!-- Dynamically rendered inputs with attached unit selectors -->
+                </div>
+              </div>
+            </div>
+
+            <!-- Output Viewing Units Toolbar -->
+            <div class="output-unit-bar">
+              <div class="output-unit-item">
+                <span>Lengths:</span>
+                <select id="view-unit-length" class="output-unit-select"></select>
+              </div>
+              <div class="output-unit-item">
+                <span>Areas:</span>
+                <select id="view-unit-area" class="output-unit-select"></select>
+              </div>
+              <div class="output-unit-item" id="volume-unit-wrapper" style="display: none;">
+                <span>Volumes:</span>
+                <select id="view-unit-volume" class="output-unit-select"></select>
+              </div>
+              <div class="output-unit-item">
+                <span>Angles:</span>
+                <select id="view-unit-angle" class="output-unit-select"></select>
+              </div>
+              <div class="output-unit-item">
+                <span>Decimals:</span>
+                <select id="view-precision" class="output-unit-select">
+                  <option value="2">2</option>
+                  <option value="4" selected>4</option>
+                  <option value="6">6</option>
+                  <option value="8">8</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Primary Metrics Hero Badges -->
+            <div class="results-hero-grid" id="hero-results">
+              <!-- Dynamically populated -->
+            </div>
+
+            <!-- Full Derived Parameters List Card -->
+            <div class="fluent-card">
+              <div class="fluent-card-header">
+                <div class="fluent-card-title">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+                  <span>All Derived Parameters</span>
+                </div>
+              </div>
+              <div class="results-table-card" id="all-results-container">
+                <!-- Dynamically populated list of every parameter -->
+              </div>
+            </div>
+
+            <!-- Step-by-Step Derivation Card -->
+            <div class="fluent-card">
+              <div class="fluent-card-header">
+                <div class="fluent-card-title">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                  <span>Step-by-Step Mathematical Derivation</span>
+                </div>
+              </div>
+              <div class="steps-container" id="steps-container">
+                <!-- Formulas & substitution steps -->
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Right Column: Interactive Visualizer -->
+          <div style="display: flex; flex-direction: column; gap: 16px;">
+            <div class="fluent-card visualizer-viewport-card">
+              <div class="fluent-card-header">
+                <div class="fluent-card-title">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                  <span id="visualizer-title">Live 2D Diagram</span>
+                </div>
+                <div class="visualizer-toolbar" id="visualizer-toolbar">
+                  <!-- Toolbar controls: Wireframe, auto-rotate, reset -->
+                </div>
+              </div>
+
+              <!-- Canvas / SVG Viewport -->
+              <div class="visualizer-canvas-container" id="visualizer-container">
+                <!-- 2D SVG or 3D WebGL Three.js attaches here -->
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- UNIT CONVERTER TOOL VIEW -->
+      <section id="view-converter" class="view-panel" style="display: none; padding: 28px; overflow-y: auto;">
+        <h1 style="font-size: 24px; font-weight: 700; margin-bottom: 6px;">Universal Unit Converter</h1>
+        <p style="color: var(--text-secondary); margin-bottom: 24px;">Convert between any length, area, volume, or angle units instantly.</p>
+        
+        <div class="fluent-card" style="max-width: 650px;">
+          <div style="display: flex; gap: 12px; margin-bottom: 12px;">
+            <button class="fluent-icon-btn active" data-conv-type="length">Length</button>
+            <button class="fluent-icon-btn" data-conv-type="area">Area</button>
+            <button class="fluent-icon-btn" data-conv-type="volume">Volume</button>
+            <button class="fluent-icon-btn" data-conv-type="angle">Angle</button>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+            <div class="param-input-group">
+              <label class="input-label">From</label>
+              <div class="input-with-unit">
+                <input type="number" id="conv-input-val" class="fluent-input" value="100">
+                <select id="conv-from-unit" class="unit-select"></select>
+              </div>
+            </div>
+            <div class="param-input-group">
+              <label class="input-label">To</label>
+              <div class="input-with-unit">
+                <input type="text" id="conv-output-val" class="fluent-input" readonly>
+                <select id="conv-to-unit" class="unit-select"></select>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SAVED HISTORY VIEW -->
+      <section id="view-history" class="view-panel" style="display: none; padding: 28px; overflow-y: auto;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+          <div>
+            <h1 style="font-size: 24px; font-weight: 700;">Saved Calculations History</h1>
+            <p style="color: var(--text-secondary); margin-top: 4px;">Review, reload, or export previous geometry solutions.</p>
+          </div>
+          <button class="fluent-icon-btn" id="btn-clear-history">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+            <span>Clear History</span>
+          </button>
+        </div>
+        <div id="history-list-container" style="display: flex; flex-direction: column; gap: 12px; max-width: 800px;">
+          <!-- Dynamically populated history cards -->
+        </div>
+      </section>
+
+      <!-- SETTINGS & ABOUT VIEW -->
+      <section id="view-settings" class="view-panel" style="display: none; padding: 28px; overflow-y: auto;">
+        <h1 style="font-size: 24px; font-weight: 700; margin-bottom: 6px;">Settings & About</h1>
+        <p style="color: var(--text-secondary); margin-bottom: 24px;">Configure themes, default units, and view application metadata for Microsoft Store.</p>
+
+        <div style="display: flex; flex-direction: column; gap: 16px; max-width: 650px;">
+          <div class="fluent-card">
+            <div class="fluent-card-title">Appearance & Theme</div>
+            <div style="display: flex; gap: 12px;">
+              <button class="fluent-icon-btn active" data-theme-btn="dark">Dark Theme</button>
+              <button class="fluent-icon-btn" data-theme-btn="light">Light Theme</button>
+            </div>
+          </div>
+
+          <div class="fluent-card">
+            <div class="fluent-card-title">About GeoFluent</div>
+            <div style="font-size: 13.5px; line-height: 1.6; color: var(--text-secondary);">
+              <p><strong>GeoFluent Geometry Calculator</strong> is an open-source, high-precision geometry computation suite engineered for Windows 11.</p>
+              <p style="margin-top: 8px;"><strong>Version</strong>: 1.0.0</p>
+              <p><strong>License</strong>: MIT Open Source License</p>
+              <p><strong>Design System</strong>: Windows 11 Fluent 2 Design</p>
+              <p><strong>Target</strong>: Microsoft Store & Windows Desktop (EXE / MSI / MSIX)</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <!-- App Script -->
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
