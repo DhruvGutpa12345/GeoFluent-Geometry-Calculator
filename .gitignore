@@ -10,6 +10,7 @@ dist/*.appx
 dist/*.msix
 dist/*.blockmap
 dist/win-unpacked/
+dist/.cache/
 dist/builder-debug.yml
 dist/builder-effective-config.yaml
 dist/latest.yml

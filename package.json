@@ -1,7 +1,7 @@
 {
   "name": "geofluent-geometry-calculator",
   "productName": "GeoFluent",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "description": "High-precision Fluent 2 Geometry Calculator for Windows 11 with interactive 2D diagrams, 3D WebGL solids, and unit conversions.",
   "main": "src/main/main.js",
   "author": "Dhruv Gupta",
@@ -55,7 +55,7 @@
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "GeoFluent Geometry Calculator",
+      "shortcutName": "GeoFluent - Geometry Calculator",
       "artifactName": "GeoFluent-Setup-${version}.${ext}"
     },
     "portable": {
@@ -70,7 +70,9 @@
       "publisher": "CN=DhruvGupta",
       "publisherDisplayName": "Dhruv Gupta",
       "applicationId": "GeoFluent",
-      "displayName": "GeoFluent Geometry Calculator",
+      "displayName": "GeoFluent - Geometry Calculator",
+      "minVersion": "10.0.17763.0",
+      "maxVersionTested": "10.0.26100.0",
       "artifactName": "GeoFluent-${version}.${ext}"
     }
   },
