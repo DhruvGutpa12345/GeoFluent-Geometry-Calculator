@@ -3,7 +3,7 @@
  * Comprehensive formulas, derivation steps, parameter extraction, and coordinates for rendering.
  */
 
-import { UNIT_TYPES } from './units.js';
+import { UNIT_TYPES, fmt } from './units.js';
 
 export const SHAPES_2D = [
   // 1. TRIANGLE
@@ -895,6 +895,315 @@ export const SHAPES_2D = [
               { title: 'Ring Width', formula: 'w = R - r', substitution: `w = ${R} - ${r} = ${width}` }
             ],
             svgData: { shape: 'annulus', R, r }
+          };
+        }
+      }
+    ]
+  },
+
+  // 12. KITE (DELTOID)
+  {
+    id: 'kite',
+    name: 'Kite (Deltoid)',
+    category: '2d',
+    description: 'Quadrilateral with two distinct pairs of equal-length adjacent sides and perpendicular diagonals.',
+    icon: 'kite',
+    methods: [
+      {
+        id: 'diagonals',
+        name: 'Two Diagonals (d₁, d₂)',
+        description: 'Provide perpendicular diagonals d1 (horizontal) and d2 (vertical, split at ratio 1:2).',
+        inputs: [
+          { id: 'd1', label: 'Diagonal 1 (d₁)', symbol: 'd₁', type: UNIT_TYPES.LENGTH, default: 6, min: 0.0001 },
+          { id: 'd2', label: 'Diagonal 2 (d₂)', symbol: 'd₂', type: UNIT_TYPES.LENGTH, default: 8, min: 0.0001 }
+        ],
+        calculate: (vals) => {
+          const { d1, d2 } = vals;
+          const area = 0.5 * d1 * d2;
+          const d2_top = d2 / 3;
+          const d2_bot = (2 * d2) / 3;
+          const a = Math.sqrt((d1 / 2) ** 2 + d2_top ** 2);
+          const b = Math.sqrt((d1 / 2) ** 2 + d2_bot ** 2);
+          const perimeter = 2 * (a + b);
+          const inradius = area / (a + b);
+
+          return {
+            outputs: [
+              { id: 'area', label: 'Area (A)', symbol: 'A', value: area, type: UNIT_TYPES.AREA, isPrimary: true },
+              { id: 'perimeter', label: 'Perimeter (P)', symbol: 'P', value: perimeter, type: UNIT_TYPES.LENGTH, isPrimary: true },
+              { id: 'side_a', label: 'Top Side (a)', symbol: 'a', value: a, type: UNIT_TYPES.LENGTH },
+              { id: 'side_b', label: 'Bottom Side (b)', symbol: 'b', value: b, type: UNIT_TYPES.LENGTH },
+              { id: 'inradius', label: 'Inradius (r)', symbol: 'r', value: inradius, type: UNIT_TYPES.LENGTH }
+            ],
+            steps: [
+              { title: 'Kite Area Formula', formula: 'A = \\frac{1}{2} d_1 d_2', substitution: `A = 0.5 \\cdot ${fmt(d1)} \\cdot ${fmt(d2)} = ${fmt(area)}` },
+              { title: 'Perimeter', formula: 'P = 2(a + b)', substitution: `P = 2(${fmt(a)} + ${fmt(b)}) = ${fmt(perimeter)}` }
+            ],
+            svgData: {
+              shape: 'polygon',
+              points: [
+                { x: d1 / 2, y: 0, label: 'Top' },
+                { x: d1, y: d2_top, label: 'Right' },
+                { x: d1 / 2, y: d2, label: 'Bottom' },
+                { x: 0, y: d2_top, label: 'Left' }
+              ],
+              inradius
+            }
+          };
+        }
+      }
+    ]
+  },
+
+  // 13. ISOSCELES TRAPEZOID
+  {
+    id: 'isosceles_trapezoid',
+    name: 'Isosceles Trapezoid',
+    category: '2d',
+    description: 'Convex quadrilateral with a line of symmetry bisecting one pair of opposite parallel sides.',
+    icon: 'trapezoid',
+    methods: [
+      {
+        id: 'bases_leg',
+        name: 'Parallel Bases & Leg (a, b, c)',
+        description: 'Provide top base a, bottom base b, and equal legs c.',
+        inputs: [
+          { id: 'a', label: 'Top Base (a)', symbol: 'a', type: UNIT_TYPES.LENGTH, default: 4, min: 0.0001 },
+          { id: 'b', label: 'Bottom Base (b)', symbol: 'b', type: UNIT_TYPES.LENGTH, default: 10, min: 0.0001 },
+          { id: 'c', label: 'Leg (c)', symbol: 'c', type: UNIT_TYPES.LENGTH, default: 5, min: 0.0001 }
+        ],
+        calculate: (vals) => {
+          const { a, b, c } = vals;
+          const diff = Math.abs(b - a) / 2;
+          if (c <= diff) throw new Error('Leg length (c) must be strictly greater than half base difference (|b-a|/2).');
+          const h = Math.sqrt(c * c - diff * diff);
+          const area = 0.5 * (a + b) * h;
+          const perimeter = a + b + 2 * c;
+          const diagonal = Math.sqrt(a * b + c * c);
+          const midline = (a + b) / 2;
+          const circumradius = (c * diagonal * Math.sqrt(a * b + c * c)) / (4 * area);
+
+          return {
+            outputs: [
+              { id: 'area', label: 'Area (A)', symbol: 'A', value: area, type: UNIT_TYPES.AREA, isPrimary: true },
+              { id: 'perimeter', label: 'Perimeter (P)', symbol: 'P', value: perimeter, type: UNIT_TYPES.LENGTH, isPrimary: true },
+              { id: 'height', label: 'Vertical Height (h)', symbol: 'h', value: h, type: UNIT_TYPES.LENGTH },
+              { id: 'diagonal', label: 'Diagonal (d)', symbol: 'd', value: diagonal, type: UNIT_TYPES.LENGTH },
+              { id: 'midline', label: 'Median / Midline (m)', symbol: 'm', value: midline, type: UNIT_TYPES.LENGTH },
+              { id: 'circumradius', label: 'Circumradius (R)', symbol: 'R', value: circumradius, type: UNIT_TYPES.LENGTH }
+            ],
+            steps: [
+              { title: 'Height Calculation', formula: 'h = \\sqrt{c^2 - ((b - a)/2)^2}', substitution: `h = \\sqrt{${fmt(c)}^2 - ${fmt(diff)}^2} = ${fmt(h)}` },
+              { title: 'Area', formula: 'A = \\frac{a + b}{2} \\cdot h', substitution: `A = (${fmt(a)} + ${fmt(b)})/2 \\cdot ${fmt(h)} = ${fmt(area)}` },
+              { title: 'Diagonal length', formula: 'd = \\sqrt{ab + c^2}', substitution: `d = \\sqrt{${fmt(a)}\\cdot${fmt(b)} + ${fmt(c)}^2} = ${fmt(diagonal)}` }
+            ],
+            svgData: {
+              shape: 'polygon',
+              points: [
+                { x: 0, y: 0 },
+                { x: b, y: 0 },
+                { x: b - diff, y: h },
+                { x: diff, y: h }
+              ],
+              circumradius
+            }
+          };
+        }
+      }
+    ]
+  },
+
+  // 14. CIRCULAR SEGMENT
+  {
+    id: 'circular_segment',
+    name: 'Circular Segment',
+    category: '2d',
+    description: 'Region of a circle cut off from the rest by a straight secant or chord.',
+    icon: 'sector',
+    methods: [
+      {
+        id: 'radius_angle',
+        name: 'Radius & Central Angle (r, θ)',
+        description: 'Provide circle radius r and central angle θ.',
+        inputs: [
+          { id: 'r', label: 'Radius (r)', symbol: 'r', type: UNIT_TYPES.LENGTH, default: 6, min: 0.0001 },
+          { id: 'theta', label: 'Central Angle (θ)', symbol: 'θ', type: UNIT_TYPES.ANGLE, default: (60 * Math.PI) / 180, min: 0.0001, max: 2 * Math.PI }
+        ],
+        calculate: (vals) => {
+          const { r, theta } = vals;
+          const chord = 2 * r * Math.sin(theta / 2);
+          const sagitta = r * (1 - Math.cos(theta / 2));
+          const arcLength = r * theta;
+          const sectorArea = 0.5 * r * r * theta;
+          const triangleArea = 0.5 * r * r * Math.sin(theta);
+          const segmentArea = sectorArea - triangleArea;
+          const perimeter = chord + arcLength;
+
+          return {
+            outputs: [
+              { id: 'segment_area', label: 'Segment Area (A_seg)', symbol: 'A_seg', value: segmentArea, type: UNIT_TYPES.AREA, isPrimary: true },
+              { id: 'sagitta', label: 'Sagitta / Height (h)', symbol: 'h', value: sagitta, type: UNIT_TYPES.LENGTH, isPrimary: true },
+              { id: 'chord', label: 'Chord Length (c)', symbol: 'c', value: chord, type: UNIT_TYPES.LENGTH },
+              { id: 'arc_length', label: 'Arc Length (s)', symbol: 's', value: arcLength, type: UNIT_TYPES.LENGTH },
+              { id: 'perimeter', label: 'Segment Perimeter', symbol: 'P', value: perimeter, type: UNIT_TYPES.LENGTH }
+            ],
+            steps: [
+              { title: 'Segment Area', formula: 'A = \\frac{1}{2}r^2(\\theta - \\sin\\theta)', substitution: `A = 0.5 \\cdot ${fmt(r)}^2(${fmt(theta)} - \\sin(${fmt(theta)})) = ${fmt(segmentArea)}` },
+              { title: 'Sagitta (Arch Height)', formula: 'h = r(1 - \\cos(\\theta / 2))', substitution: `h = ${fmt(r)}(1 - \\cos(${fmt(theta / 2)})) = ${fmt(sagitta)}` }
+            ],
+            svgData: { shape: 'sector', r, theta }
+          };
+        }
+      }
+    ]
+  },
+
+  // 15. ANNULUS SECTOR (RING SECTOR)
+  {
+    id: 'annulus_sector',
+    name: 'Annulus Sector (Ring Sector)',
+    category: '2d',
+    description: 'Portion of an annulus cut by two radial lines at an angle θ.',
+    icon: 'annulus',
+    methods: [
+      {
+        id: 'radii_angle',
+        name: 'Outer & Inner Radii and Angle (R, r, θ)',
+        description: 'Provide outer radius R, inner radius r, and angle θ.',
+        inputs: [
+          { id: 'R', label: 'Outer Radius (R)', symbol: 'R', type: UNIT_TYPES.LENGTH, default: 8, min: 0.0001 },
+          { id: 'r', label: 'Inner Radius (r)', symbol: 'r', type: UNIT_TYPES.LENGTH, default: 5, min: 0.0001 },
+          { id: 'theta', label: 'Sector Angle (θ)', symbol: 'θ', type: UNIT_TYPES.ANGLE, default: (90 * Math.PI) / 180, min: 0.0001, max: 2 * Math.PI }
+        ],
+        calculate: (vals) => {
+          const { R, r, theta } = vals;
+          if (r >= R) throw new Error('Inner radius (r) must be strictly less than outer radius (R).');
+          const width = R - r;
+          const area = 0.5 * (R * R - r * r) * theta;
+          const outerArc = R * theta;
+          const innerArc = r * theta;
+          const perimeter = 2 * width + outerArc + innerArc;
+
+          return {
+            outputs: [
+              { id: 'area', label: 'Sector Area (A)', symbol: 'A', value: area, type: UNIT_TYPES.AREA, isPrimary: true },
+              { id: 'perimeter', label: 'Total Perimeter (P)', symbol: 'P', value: perimeter, type: UNIT_TYPES.LENGTH, isPrimary: true },
+              { id: 'width', label: 'Radial Width (w)', symbol: 'w', value: width, type: UNIT_TYPES.LENGTH },
+              { id: 'outer_arc', label: 'Outer Arc Length', symbol: 's_out', value: outerArc, type: UNIT_TYPES.LENGTH },
+              { id: 'inner_arc', label: 'Inner Arc Length', symbol: 's_in', value: innerArc, type: UNIT_TYPES.LENGTH }
+            ],
+            steps: [
+              { title: 'Annulus Sector Area', formula: 'A = \\frac{1}{2}(R^2 - r^2)\\theta', substitution: `A = 0.5(${fmt(R)}^2 - ${fmt(r)}^2)\\cdot ${fmt(theta)} = ${fmt(area)}` },
+              { title: 'Perimeter', formula: 'P = 2(R - r) + (R + r)\\theta', substitution: `P = 2(${fmt(width)}) + (${fmt(R + r)})\\cdot ${fmt(theta)} = ${fmt(perimeter)}` }
+            ],
+            svgData: { shape: 'annulus', R, r }
+          };
+        }
+      }
+    ]
+  },
+
+  // 16. REGULAR STAR POLYGON
+  {
+    id: 'star_polygon',
+    name: 'Regular Star Polygon',
+    category: '2d',
+    description: 'Equiangular star polygon with alternating outer points and inner vertices (Pentagram, Hexagram, etc.).',
+    icon: 'polygon',
+    methods: [
+      {
+        id: 'star_params',
+        name: 'Points Count (n) & Radii (R, r)',
+        description: 'Provide number of star points n, outer point radius R, and inner valley radius r.',
+        inputs: [
+          { id: 'n', label: 'Points Count (n)', symbol: 'n', type: UNIT_TYPES.COUNT, default: 5, min: 3, max: 24 },
+          { id: 'R', label: 'Outer Radius (R)', symbol: 'R', type: UNIT_TYPES.LENGTH, default: 8, min: 0.0001 },
+          { id: 'r', label: 'Inner Radius (r)', symbol: 'r', type: UNIT_TYPES.LENGTH, default: 3.5, min: 0.0001 }
+        ],
+        calculate: (vals) => {
+          const n = Math.round(vals.n);
+          const { R, r } = vals;
+          if (r >= R) throw new Error('Inner radius (r) must be strictly less than outer radius (R).');
+
+          const angleStep = Math.PI / n;
+          const edge = Math.sqrt(R * R + r * r - 2 * R * r * Math.cos(angleStep));
+          const perimeter = 2 * n * edge;
+          const area = n * R * r * Math.sin(angleStep);
+
+          const points = [];
+          for (let i = 0; i < 2 * n; i++) {
+            const rad = i % 2 === 0 ? R : r;
+            const a = i * angleStep - Math.PI / 2;
+            points.push({
+              x: R + rad * Math.cos(a),
+              y: R + rad * Math.sin(a)
+            });
+          }
+
+          return {
+            outputs: [
+              { id: 'area', label: 'Star Area (A)', symbol: 'A', value: area, type: UNIT_TYPES.AREA, isPrimary: true },
+              { id: 'perimeter', label: 'Perimeter (P)', symbol: 'P', value: perimeter, type: UNIT_TYPES.LENGTH, isPrimary: true },
+              { id: 'edge', label: 'Single Edge Length', symbol: 'e', value: edge, type: UNIT_TYPES.LENGTH },
+              { id: 'span', label: 'Tip-to-Tip Span', symbol: '2R', value: 2 * R, type: UNIT_TYPES.LENGTH }
+            ],
+            steps: [
+              { title: 'Star Area Formula', formula: 'A = n \\cdot R \\cdot r \\cdot \\sin(\\pi / n)', substitution: `A = ${n} \\cdot ${fmt(R)} \\cdot ${fmt(r)} \\cdot \\sin(\\pi / ${n}) = ${fmt(area)}` },
+              { title: 'Edge Length', formula: 'e = \\sqrt{R^2 + r^2 - 2Rr\\cos(\\pi / n)}', substitution: `e = \\sqrt{${fmt(R)}^2 + ${fmt(r)}^2 - 2(${fmt(R)})(${fmt(r)})\\cos(\\pi / ${n})} = ${fmt(edge)}` }
+            ],
+            svgData: { shape: 'polygon', points }
+          };
+        }
+      }
+    ]
+  },
+
+  // 17. HEART SHAPE (CARDIOID)
+  {
+    id: 'heart_cardioid',
+    name: 'Heart Shape (Cardioid)',
+    category: '2d',
+    description: 'Smooth mathematical heart curve / cardioid shape.',
+    icon: 'heart',
+    methods: [
+      {
+        id: 'scale_param',
+        name: 'Scale Parameter (a)',
+        description: 'Provide characteristic scale parameter a.',
+        inputs: [
+          { id: 'a', label: 'Scale Parameter (a)', symbol: 'a', type: UNIT_TYPES.LENGTH, default: 4, min: 0.0001 }
+        ],
+        calculate: (vals) => {
+          const { a } = vals;
+          const area = 1.5 * Math.PI * a * a;
+          const perimeter = 8 * a;
+          const maxWidth = 4 * a;
+          const maxHeight = 3.5 * a;
+
+          const points = [];
+          const totalPts = 64;
+          for (let i = 0; i <= totalPts; i++) {
+            const t = (2 * Math.PI * i) / totalPts;
+            const x = 16 * Math.pow(Math.sin(t), 3);
+            const y = -(13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t));
+            points.push({
+              x: (x * a) / 8 + maxWidth / 2,
+              y: (y * a) / 8 + maxHeight / 2
+            });
+          }
+
+          return {
+            outputs: [
+              { id: 'area', label: 'Heart Area (A)', symbol: 'A', value: area, type: UNIT_TYPES.AREA, isPrimary: true },
+              { id: 'perimeter', label: 'Perimeter (P)', symbol: 'P', value: perimeter, type: UNIT_TYPES.LENGTH, isPrimary: true },
+              { id: 'max_width', label: 'Maximum Width', symbol: 'W', value: maxWidth, type: UNIT_TYPES.LENGTH },
+              { id: 'max_height', label: 'Maximum Height', symbol: 'H', value: maxHeight, type: UNIT_TYPES.LENGTH }
+            ],
+            steps: [
+              { title: 'Cardioid Area Formula', formula: 'A = \\frac{3}{2}\\pi a^2', substitution: `A = 1.5 \\cdot \\pi \\cdot ${fmt(a)}^2 = ${fmt(area)}` },
+              { title: 'Perimeter Formula', formula: 'P = 8a', substitution: `P = 8 \\cdot ${fmt(a)} = ${fmt(perimeter)}` }
+            ],
+            svgData: { shape: 'polygon', points }
           };
         }
       }

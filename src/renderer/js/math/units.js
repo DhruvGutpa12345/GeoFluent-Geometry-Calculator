@@ -137,3 +137,20 @@ export function formatNumber(val, precision = 4) {
     useGrouping: true
   });
 }
+
+/**
+ * Concise number formatter for formula step substitutions.
+ * Prevents long floating point decimals in mathematical derivations.
+ */
+export function fmt(val, precision = 4) {
+  if (val === null || val === undefined || isNaN(val)) return '0';
+  if (!isFinite(val)) return val > 0 ? 'Infinity' : '-Infinity';
+  const num = Number(val);
+  if (Math.abs(num) === 0) return '0';
+  if (Math.abs(num) >= 1e9 || (Math.abs(num) < 1e-4 && Math.abs(num) > 0)) {
+    return num.toExponential(precision);
+  }
+  const factor = Math.pow(10, precision);
+  const rounded = Math.round(num * factor) / factor;
+  return rounded.toString();
+}

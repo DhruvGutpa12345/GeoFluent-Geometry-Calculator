@@ -9,6 +9,20 @@ import { Visualizer2D } from './visualizers/visualizer2d.js';
 import { Visualizer3D } from './visualizers/visualizer3d.js';
 import { Store } from './store.js';
 
+/**
+ * Cleanly format floating point numbers in derivation steps to avoid excessive decimal digits.
+ */
+export function formatDerivationNumbers(text, precision = 4) {
+  if (!text) return '';
+  return text.replace(/(\d+\.\d+)/g, (match) => {
+    const num = parseFloat(match);
+    if (isNaN(num)) return match;
+    const factor = Math.pow(10, precision);
+    const rounded = Math.round(num * factor) / factor;
+    return rounded.toString();
+  });
+}
+
 class App {
   constructor() {
     this.currentMode = '2d'; // '2d' | '3d'
@@ -57,11 +71,52 @@ class App {
     const minBtn = document.getElementById('btn-minimize');
     const maxBtn = document.getElementById('btn-maximize');
     const closeBtn = document.getElementById('btn-close');
+    const titlebar = document.getElementById('titlebar');
+
+    const updateMaxBtnIcon = (isMaximized) => {
+      if (!maxBtn) return;
+      if (isMaximized) {
+        maxBtn.title = 'Restore';
+        maxBtn.setAttribute('aria-label', 'Restore');
+        // Windows 11 Restore glyph (overlapping squares)
+        maxBtn.innerHTML = `
+          <svg width="10" height="10" viewBox="0 0 10 10">
+            <path fill="none" stroke="currentColor" stroke-width="1" d="M2.5 1.5h6v6h-2m-5 0h6v-6h-6z M1.5 3.5h5v5h-5z"/>
+          </svg>
+        `;
+      } else {
+        maxBtn.title = 'Maximize';
+        maxBtn.setAttribute('aria-label', 'Maximize');
+        // Maximize glyph (single square)
+        maxBtn.innerHTML = `
+          <svg width="10" height="10" viewBox="0 0 10 10">
+            <path fill="none" stroke="currentColor" stroke-width="1" d="M.5.5h9v9h-9z"/>
+          </svg>
+        `;
+      }
+    };
 
     if (window.electronAPI) {
       if (minBtn) minBtn.addEventListener('click', () => window.electronAPI.minimizeWindow());
       if (maxBtn) maxBtn.addEventListener('click', () => window.electronAPI.maximizeWindow());
       if (closeBtn) closeBtn.addEventListener('click', () => window.electronAPI.closeWindow());
+
+      if (window.electronAPI.onMaximizedChange) {
+        window.electronAPI.onMaximizedChange((isMaximized) => {
+          updateMaxBtnIcon(isMaximized);
+        });
+      }
+
+      if (window.electronAPI.isMaximized) {
+        window.electronAPI.isMaximized().then(isMax => updateMaxBtnIcon(isMax));
+      }
+
+      if (titlebar) {
+        titlebar.addEventListener('dblclick', (e) => {
+          if (e.target.closest('.window-controls')) return;
+          window.electronAPI.maximizeWindow();
+        });
+      }
     }
   }
 
@@ -423,15 +478,16 @@ class App {
       allResultsContainer.appendChild(row);
     });
 
-    // 3. Step-by-Step Derivations
+    // 3. Step-by-Step Derivations (Formatted cleanly to prevent long decimal overflows)
     if (result.steps && result.steps.length > 0) {
       result.steps.forEach((step, idx) => {
         const item = document.createElement('div');
         item.className = 'step-item';
+        const formattedSubst = formatDerivationNumbers(step.substitution, this.viewUnits.precision);
         item.innerHTML = `
           <div class="step-title">${idx + 1}. ${step.title}</div>
           <div class="step-formula">Formula: ${step.formula}</div>
-          <div class="step-subst">${step.substitution}</div>
+          <div class="step-subst">${formattedSubst}</div>
         `;
         stepsContainer.appendChild(item);
       });
@@ -440,10 +496,9 @@ class App {
 
   setupVisualizers() {
     const container2D = document.getElementById('visualizer-2d-container');
-    const container3D = document.getElementById('visualizer-3d-container');
-
     this.visualizer2D = new Visualizer2D(container2D);
-    this.visualizer3D = new Visualizer3D(container3D);
+    // Visualizer3D is lazy-loaded on demand to ensure near-instant initial application startup
+    this.visualizer3D = null;
 
     // Initial toolbar setup
     this.updateVisualizerToolbar();
@@ -461,7 +516,7 @@ class App {
       guideBtn.onclick = () => {
         guidesActive = !guidesActive;
         guideBtn.classList.toggle('active', guidesActive);
-        this.visualizer2D.setShowGuides(guidesActive);
+        if (this.visualizer2D) this.visualizer2D.setShowGuides(guidesActive);
       };
       toolbar.appendChild(guideBtn);
     } else {
@@ -473,7 +528,7 @@ class App {
       autoRotBtn.onclick = () => {
         autoRot = !autoRot;
         autoRotBtn.classList.toggle('active', autoRot);
-        this.visualizer3D.setAutoRotate(autoRot);
+        if (this.visualizer3D) this.visualizer3D.setAutoRotate(autoRot);
       };
       toolbar.appendChild(autoRotBtn);
 
@@ -484,7 +539,7 @@ class App {
       wireBtn.onclick = () => {
         wire = !wire;
         wireBtn.classList.toggle('active', wire);
-        this.visualizer3D.setWireframe(wire);
+        if (this.visualizer3D) this.visualizer3D.setWireframe(wire);
       };
       toolbar.appendChild(wireBtn);
 
@@ -492,7 +547,7 @@ class App {
       resetBtn.className = 'fluent-icon-btn';
       resetBtn.innerHTML = `<span>Reset View</span>`;
       resetBtn.onclick = () => {
-        this.visualizer3D.resetView();
+        if (this.visualizer3D) this.visualizer3D.resetView();
       };
       toolbar.appendChild(resetBtn);
     }
@@ -517,6 +572,10 @@ class App {
       if (container2D) container2D.style.display = 'none';
       if (container3D) {
         container3D.style.display = 'block';
+        // Lazy initialize Visualizer3D if not already created
+        if (!this.visualizer3D) {
+          this.visualizer3D = new Visualizer3D(container3D);
+        }
         this.visualizer3D.resize();
         this.visualizer3D.render(result.threeData);
       }
@@ -668,8 +727,12 @@ class App {
           return;
         }
         Store.addHistory({
+          mode: this.currentMode,
+          shapeId: this.latestCalculation.shapeId,
           shapeName: this.latestCalculation.shapeName,
+          methodId: this.latestCalculation.methodId,
           methodName: this.latestCalculation.methodName,
+          rawInputs: JSON.parse(JSON.stringify(this.inputState)),
           inputs: this.latestCalculation.inputs,
           outputs: this.latestCalculation.result.outputs.map(out => {
             const targetUnitId = out.type === UNIT_TYPES.LENGTH ? this.viewUnits.length :
@@ -701,6 +764,67 @@ class App {
     }
   }
 
+  loadSavedCalculation(item) {
+    if (!item) return;
+    const targetMode = item.mode || (SHAPES_2D.some(s => s.id === item.shapeId) ? '2d' : '3d');
+
+    // 1. Switch sidebar highlight and active tab to calculator mode
+    const navItems = document.querySelectorAll('.nav-item');
+    navItems.forEach(n => {
+      if (n.dataset.tab === targetMode) n.classList.add('active');
+      else n.classList.remove('active');
+    });
+
+    this.switchView(targetMode);
+
+    // 2. Select the shape
+    const shape = this.currentShapeList.find(s => s.id === item.shapeId);
+    if (shape) {
+      this.currentShape = shape;
+      const method = shape.methods.find(m => m.id === item.methodId) || shape.methods[0];
+      this.currentMethod = method;
+
+      // Update shape pills
+      this.renderShapePills();
+      const pills = document.querySelectorAll('.shape-pill');
+      pills.forEach((p, idx) => {
+        if (this.currentShapeList[idx].id === shape.id) {
+          p.classList.add('active');
+          p.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+        } else {
+          p.classList.remove('active');
+        }
+      });
+
+      // Render shape view and inputs
+      this.renderShapeView();
+
+      // Ensure method selector matches
+      const methodSelect = document.getElementById('method-select');
+      if (methodSelect) {
+        methodSelect.value = method.id;
+      }
+
+      // Restore raw inputs & units
+      if (item.rawInputs) {
+        for (const [inpId, data] of Object.entries(item.rawInputs)) {
+          if (this.inputState[inpId]) {
+            this.inputState[inpId].val = data.val;
+            if (data.unitId) this.inputState[inpId].unitId = data.unitId;
+
+            const inputEl = document.getElementById(`input-${inpId}`);
+            if (inputEl) inputEl.value = data.val;
+            const unitEl = document.getElementById(`unit-${inpId}`);
+            if (unitEl && data.unitId) unitEl.value = data.unitId;
+          }
+        }
+      }
+
+      this.recalculate();
+      this.showToast(`Restored calculation: ${shape.name}`);
+    }
+  }
+
   renderHistoryList() {
     const container = document.getElementById('history-list-container');
     const items = Store.getHistory();
@@ -717,11 +841,15 @@ class App {
 
     items.forEach(item => {
       const card = document.createElement('div');
-      card.className = 'fluent-card';
+      card.className = 'fluent-card history-card-interactive';
+      card.title = 'Click to open and recompute this calculation';
       card.innerHTML = `
         <div class="fluent-card-header">
           <div>
-            <div style="font-size: 16px; font-weight: 700; color: var(--accent-light);">${item.shapeName}</div>
+            <div style="font-size: 16px; font-weight: 700; color: var(--accent-light); display: flex; align-items: center; gap: 8px;">
+              <span>${item.shapeName}</span>
+              <span style="font-size: 11px; font-weight: 500; background: rgba(96, 205, 255, 0.15); color: #60cdff; padding: 2px 6px; border-radius: 4px;">Click to restore ↗</span>
+            </div>
             <div style="font-size: 12px; color: var(--text-tertiary);">${new Date(item.timestamp).toLocaleString()} • ${item.methodName}</div>
           </div>
           <button class="fluent-icon-btn" data-delete-id="${item.id}" title="Delete">
@@ -736,9 +864,15 @@ class App {
         </div>
       `;
 
-      card.querySelector(`[data-delete-id="${item.id}"]`).addEventListener('click', () => {
+      card.addEventListener('click', () => {
+        this.loadSavedCalculation(item);
+      });
+
+      card.querySelector(`[data-delete-id="${item.id}"]`).addEventListener('click', (e) => {
+        e.stopPropagation();
         Store.deleteHistoryItem(item.id);
         this.renderHistoryList();
+        this.showToast('Calculation removed from history');
       });
 
       container.appendChild(card);

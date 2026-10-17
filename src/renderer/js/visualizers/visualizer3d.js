@@ -289,6 +289,64 @@ export class Visualizer3D {
         );
         break;
       }
+      case 'spherical_cap': {
+        const R = threeData.radius || 6;
+        const h = threeData.height || 3;
+        const maxDim = Math.max(R * 2, h) || 1;
+        const scale = (norm * 1.8) / maxDim;
+        const ratio = Math.max(-1, Math.min(1, (R - h) / R));
+        const thetaMax = Math.acos(ratio);
+        geometry = new THREE.SphereGeometry(R * scale, 36, 18, 0, Math.PI * 2, 0, thetaMax);
+        break;
+      }
+      case 'hollow_cylinder': {
+        const Rout = threeData.outerRadius || 5;
+        const Rin = Math.min(threeData.innerRadius || 3, Rout * 0.95);
+        const H = threeData.height || 10;
+        const maxDim = Math.max(Rout * 2, H) || 1;
+        const scale = (norm * 1.8) / maxDim;
+        const shape = new THREE.Shape();
+        shape.absarc(0, 0, Rout * scale, 0, Math.PI * 2, false);
+        const holePath = new THREE.Path();
+        holePath.absarc(0, 0, Rin * scale, 0, Math.PI * 2, true);
+        shape.holes.push(holePath);
+        geometry = new THREE.ExtrudeGeometry(shape, {
+          depth: H * scale,
+          bevelEnabled: false,
+          curveSegments: 36
+        });
+        geometry.center();
+        geometry.rotateX(Math.PI / 2);
+        break;
+      }
+      case 'tetrahedron': {
+        const edge = threeData.edge || 6;
+        const circumR = (edge * Math.sqrt(6)) / 4;
+        const scale = (norm * 1.6) / (circumR * 2);
+        geometry = new THREE.TetrahedronGeometry(circumR * scale);
+        break;
+      }
+      case 'octahedron': {
+        const edge = threeData.edge || 5;
+        const circumR = edge / Math.SQRT2;
+        const scale = (norm * 1.6) / (circumR * 2);
+        geometry = new THREE.OctahedronGeometry(circumR * scale);
+        break;
+      }
+      case 'icosahedron': {
+        const edge = threeData.edge || 4;
+        const circumR = (edge / 4) * Math.sqrt(10 + 2 * Math.sqrt(5));
+        const scale = (norm * 1.6) / (circumR * 2);
+        geometry = new THREE.IcosahedronGeometry(circumR * scale);
+        break;
+      }
+      case 'dodecahedron': {
+        const edge = threeData.edge || 4;
+        const circumR = (edge / 4) * (Math.sqrt(3) + Math.sqrt(15));
+        const scale = (norm * 1.6) / (circumR * 2);
+        geometry = new THREE.DodecahedronGeometry(circumR * scale);
+        break;
+      }
       default:
         geometry = new THREE.SphereGeometry(norm, 32, 24);
     }
@@ -300,7 +358,8 @@ export class Visualizer3D {
     this.currentMeshGroup.add(solidMesh);
 
     // 2. Wireframe / Edge Highlight
-    const isPoly = (threeData.type === 'cube' || threeData.type === 'cuboid' || threeData.type === 'pyramid' || threeData.type === 'prism');
+    const polyTypes = ['cube', 'cuboid', 'pyramid', 'prism', 'tetrahedron', 'octahedron', 'icosahedron', 'dodecahedron'];
+    const isPoly = polyTypes.includes(threeData.type);
     const wireGeom = isPoly ? new THREE.EdgesGeometry(geometry, 15) : new THREE.WireframeGeometry(geometry);
     const wireMat = new THREE.LineBasicMaterial({
       color: 0x60cdff,

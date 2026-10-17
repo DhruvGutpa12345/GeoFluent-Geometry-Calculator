@@ -661,5 +661,316 @@ export const SHAPES_3D = [
         }
       }
     ]
+  },
+
+  // 13. SPHERICAL CAP (DOME)
+  {
+    id: 'spherical_cap',
+    name: 'Spherical Cap (Dome)',
+    category: '3d',
+    description: 'Portion of a sphere cut off by a planar slice, forming a dome with a circular base.',
+    icon: 'spherical_cap',
+    methods: [
+      {
+        id: 'by_sphere_radius_and_height',
+        name: 'By Sphere Radius & Cap Height (R, h)',
+        description: 'Provide sphere radius R and cap height h.',
+        inputs: [
+          { id: 'R', label: 'Sphere Radius (R)', symbol: 'R', type: UNIT_TYPES.LENGTH, default: 6, min: 0.0001 },
+          { id: 'h', label: 'Cap Height (h)', symbol: 'h', type: UNIT_TYPES.LENGTH, default: 3, min: 0.0001 }
+        ],
+        calculate: (vals) => {
+          const { R, h } = vals;
+          if (h > 2 * R) {
+            throw new Error('Cap height h cannot exceed the sphere diameter (2R)');
+          }
+          const a = Math.sqrt(Math.max(0, h * (2 * R - h)));
+          const curvedArea = 2 * Math.PI * R * h;
+          const baseArea = Math.PI * a * a;
+          const totalArea = curvedArea + baseArea;
+          const volume = (Math.PI * h * h * (3 * R - h)) / 3;
+
+          return {
+            outputs: [
+              { id: 'volume', label: 'Volume (V)', symbol: 'V', value: volume, type: UNIT_TYPES.VOLUME, isPrimary: true },
+              { id: 'surface_area', label: 'Total Surface Area (A)', symbol: 'A', value: totalArea, type: UNIT_TYPES.AREA, isPrimary: true },
+              { id: 'curved_area', label: 'Curved Dome Surface Area', symbol: 'A_c', value: curvedArea, type: UNIT_TYPES.AREA, isPrimary: true },
+              { id: 'base_radius', label: 'Base Circle Radius (a)', symbol: 'a', value: a, type: UNIT_TYPES.LENGTH },
+              { id: 'base_area', label: 'Base Circle Area', symbol: 'A_b', value: baseArea, type: UNIT_TYPES.AREA }
+            ],
+            steps: [
+              { title: 'Base Circle Radius', formula: 'a = \\sqrt{h(2R - h)}', substitution: `a = \\sqrt{${h}(2(${R}) - ${h})} = ${a}` },
+              { title: 'Curved Dome Area', formula: 'A_{curved} = 2\\pi R h', substitution: `A_{curved} = 2\\pi(${R})(${h}) = ${curvedArea}` },
+              { title: 'Cap Volume', formula: 'V = \\frac{\\pi h^2}{3}(3R - h)', substitution: `V = \\frac{\\pi(${h}^2)}{3}(3(${R}) - ${h}) = ${volume}` }
+            ],
+            threeData: { type: 'spherical_cap', radius: R, height: h }
+          };
+        }
+      },
+      {
+        id: 'by_base_radius_and_height',
+        name: 'By Base Radius & Cap Height (a, h)',
+        description: 'Provide base circle radius a and cap height h.',
+        inputs: [
+          { id: 'a', label: 'Base Radius (a)', symbol: 'a', type: UNIT_TYPES.LENGTH, default: 4, min: 0.0001 },
+          { id: 'h', label: 'Cap Height (h)', symbol: 'h', type: UNIT_TYPES.LENGTH, default: 3, min: 0.0001 }
+        ],
+        calculate: (vals) => {
+          const { a, h } = vals;
+          const R = (a * a + h * h) / (2 * h);
+          const curvedArea = Math.PI * (a * a + h * h);
+          const baseArea = Math.PI * a * a;
+          const totalArea = curvedArea + baseArea;
+          const volume = (Math.PI * h * (3 * a * a + h * h)) / 6;
+
+          return {
+            outputs: [
+              { id: 'volume', label: 'Volume (V)', symbol: 'V', value: volume, type: UNIT_TYPES.VOLUME, isPrimary: true },
+              { id: 'surface_area', label: 'Total Surface Area (A)', symbol: 'A', value: totalArea, type: UNIT_TYPES.AREA, isPrimary: true },
+              { id: 'sphere_radius', label: 'Parent Sphere Radius (R)', symbol: 'R', value: R, type: UNIT_TYPES.LENGTH, isPrimary: true },
+              { id: 'curved_area', label: 'Curved Dome Surface Area', symbol: 'A_c', value: curvedArea, type: UNIT_TYPES.AREA },
+              { id: 'base_area', label: 'Base Circle Area', symbol: 'A_b', value: baseArea, type: UNIT_TYPES.AREA }
+            ],
+            steps: [
+              { title: 'Sphere Radius', formula: 'R = \\frac{a^2 + h^2}{2h}', substitution: `R = \\frac{${a}^2 + ${h}^2}{2(${h})} = ${R}` },
+              { title: 'Cap Volume', formula: 'V = \\frac{\\pi h}{6}(3a^2 + h^2)', substitution: `V = \\frac{\\pi(${h})}{6}(3(${a}^2) + ${h}^2) = ${volume}` },
+              { title: 'Total Surface Area', formula: 'A = \\pi(2a^2 + h^2)', substitution: `A = \\pi(2(${a}^2) + ${h}^2) = ${totalArea}` }
+            ],
+            threeData: { type: 'spherical_cap', radius: R, height: h }
+          };
+        }
+      }
+    ]
+  },
+
+  // 14. HOLLOW CYLINDER (PIPE)
+  {
+    id: 'hollow_cylinder',
+    name: 'Hollow Cylinder (Pipe / Tube)',
+    category: '3d',
+    description: 'Circular cylindrical tube or pipe with an outer wall and inner concentric cylindrical bore.',
+    icon: 'hollow_cylinder',
+    methods: [
+      {
+        id: 'by_radii_and_height',
+        name: 'By Outer & Inner Radii, Height (R, r, h)',
+        description: 'Provide outer radius R, inner radius r, and height h.',
+        inputs: [
+          { id: 'R', label: 'Outer Radius (R)', symbol: 'R', type: UNIT_TYPES.LENGTH, default: 5, min: 0.0001 },
+          { id: 'r', label: 'Inner Radius (r)', symbol: 'r', type: UNIT_TYPES.LENGTH, default: 3, min: 0.0001 },
+          { id: 'h', label: 'Height / Length (h)', symbol: 'h', type: UNIT_TYPES.LENGTH, default: 10, min: 0.0001 }
+        ],
+        calculate: (vals) => {
+          const { R, r, h } = vals;
+          if (r >= R) {
+            throw new Error('Inner radius (r) must be strictly less than outer radius (R)');
+          }
+          const thickness = R - r;
+          const outerLateral = 2 * Math.PI * R * h;
+          const innerLateral = 2 * Math.PI * r * h;
+          const ringAreaEach = Math.PI * (R * R - r * r);
+          const totalArea = outerLateral + innerLateral + 2 * ringAreaEach;
+          const volume = Math.PI * h * (R * R - r * r);
+
+          return {
+            outputs: [
+              { id: 'volume', label: 'Material Volume (V)', symbol: 'V', value: volume, type: UNIT_TYPES.VOLUME, isPrimary: true },
+              { id: 'surface_area', label: 'Total Surface Area (A)', symbol: 'A', value: totalArea, type: UNIT_TYPES.AREA, isPrimary: true },
+              { id: 'wall_thickness', label: 'Wall Thickness (t)', symbol: 't', value: thickness, type: UNIT_TYPES.LENGTH, isPrimary: true },
+              { id: 'outer_lateral', label: 'Outer Lateral Surface Area', symbol: 'A_{out}', value: outerLateral, type: UNIT_TYPES.AREA },
+              { id: 'inner_lateral', label: 'Inner Lateral Surface Area', symbol: 'A_{in}', value: innerLateral, type: UNIT_TYPES.AREA },
+              { id: 'bore_capacity', label: 'Inner Bore Capacity', symbol: 'V_{bore}', value: Math.PI * r * r * h, type: UNIT_TYPES.VOLUME }
+            ],
+            steps: [
+              { title: 'Wall Thickness', formula: 't = R - r', substitution: `t = ${R} - ${r} = ${thickness}` },
+              { title: 'Material Volume', formula: 'V = \\pi h(R^2 - r^2)', substitution: `V = \\pi(${h})(${R}^2 - ${r}^2) = ${volume}` },
+              { title: 'Total Surface Area', formula: 'A = 2\\pi(R + r)h + 2\\pi(R^2 - r^2)', substitution: `A = 2\\pi(${R} + ${r})(${h}) + 2\\pi(${R}^2 - ${r}^2) = ${totalArea}` }
+            ],
+            threeData: { type: 'hollow_cylinder', outerRadius: R, innerRadius: r, height: h }
+          };
+        }
+      }
+    ]
+  },
+
+  // 15. REGULAR TETRAHEDRON
+  {
+    id: 'tetrahedron',
+    name: 'Regular Tetrahedron',
+    category: '3d',
+    description: 'Platonic solid with four congruent equilateral triangular faces, four vertices, and six edges.',
+    icon: 'tetrahedron',
+    methods: [
+      {
+        id: 'by_edge',
+        name: 'By Edge Length (a)',
+        description: 'Provide edge length a.',
+        inputs: [
+          { id: 'a', label: 'Edge Length (a)', symbol: 'a', type: UNIT_TYPES.LENGTH, default: 6, min: 0.0001 }
+        ],
+        calculate: (vals) => {
+          const { a } = vals;
+          const faceArea = (Math.sqrt(3) / 4) * a * a;
+          const totalArea = Math.sqrt(3) * a * a;
+          const volume = (Math.pow(a, 3)) / (6 * Math.SQRT2);
+          const height = Math.sqrt(2 / 3) * a;
+          const circumradius = (Math.sqrt(6) / 4) * a;
+          const inradius = a / Math.sqrt(24);
+
+          return {
+            outputs: [
+              { id: 'volume', label: 'Volume (V)', symbol: 'V', value: volume, type: UNIT_TYPES.VOLUME, isPrimary: true },
+              { id: 'surface_area', label: 'Total Surface Area (A)', symbol: 'A', value: totalArea, type: UNIT_TYPES.AREA, isPrimary: true },
+              { id: 'height', label: 'Vertical Height (H)', symbol: 'H', value: height, type: UNIT_TYPES.LENGTH, isPrimary: true },
+              { id: 'face_area', label: 'Single Face Area', symbol: 'A_f', value: faceArea, type: UNIT_TYPES.AREA },
+              { id: 'circumradius', label: 'Circumradius (R)', symbol: 'R', value: circumradius, type: UNIT_TYPES.LENGTH },
+              { id: 'inradius', label: 'Inradius (r)', symbol: 'r', value: inradius, type: UNIT_TYPES.LENGTH }
+            ],
+            steps: [
+              { title: 'Volume', formula: 'V = \\frac{a^3}{6\\sqrt{2}}', substitution: `V = \\frac{${a}^3}{6\\sqrt{2}} = ${volume}` },
+              { title: 'Total Surface Area', formula: 'A = \\sqrt{3} a^2', substitution: `A = \\sqrt{3}(${a}^2) = ${totalArea}` },
+              { title: 'Vertical Height', formula: 'H = \\sqrt{2/3} a', substitution: `H = \\sqrt{2/3}(${a}) = ${height}` }
+            ],
+            threeData: { type: 'tetrahedron', edge: a }
+          };
+        }
+      }
+    ]
+  },
+
+  // 16. REGULAR OCTAHEDRON
+  {
+    id: 'octahedron',
+    name: 'Regular Octahedron',
+    category: '3d',
+    description: 'Platonic solid with eight congruent equilateral triangular faces, six vertices, and twelve edges.',
+    icon: 'octahedron',
+    methods: [
+      {
+        id: 'by_edge',
+        name: 'By Edge Length (a)',
+        description: 'Provide edge length a.',
+        inputs: [
+          { id: 'a', label: 'Edge Length (a)', symbol: 'a', type: UNIT_TYPES.LENGTH, default: 5, min: 0.0001 }
+        ],
+        calculate: (vals) => {
+          const { a } = vals;
+          const faceArea = (Math.sqrt(3) / 4) * a * a;
+          const totalArea = 2 * Math.sqrt(3) * a * a;
+          const volume = (Math.SQRT2 / 3) * Math.pow(a, 3);
+          const circumradius = a / Math.SQRT2;
+          const inradius = a / Math.sqrt(6);
+          const midradius = a / 2;
+
+          return {
+            outputs: [
+              { id: 'volume', label: 'Volume (V)', symbol: 'V', value: volume, type: UNIT_TYPES.VOLUME, isPrimary: true },
+              { id: 'surface_area', label: 'Total Surface Area (A)', symbol: 'A', value: totalArea, type: UNIT_TYPES.AREA, isPrimary: true },
+              { id: 'circumradius', label: 'Circumradius (R)', symbol: 'R', value: circumradius, type: UNIT_TYPES.LENGTH, isPrimary: true },
+              { id: 'inradius', label: 'Inradius (r)', symbol: 'r', value: inradius, type: UNIT_TYPES.LENGTH },
+              { id: 'midradius', label: 'Midradius (ρ)', symbol: 'ρ', value: midradius, type: UNIT_TYPES.LENGTH },
+              { id: 'face_area', label: 'Single Face Area', symbol: 'A_f', value: faceArea, type: UNIT_TYPES.AREA }
+            ],
+            steps: [
+              { title: 'Volume', formula: 'V = \\frac{\\sqrt{2}}{3} a^3', substitution: `V = \\frac{\\sqrt{2}}{3}(${a}^3) = ${volume}` },
+              { title: 'Total Surface Area', formula: 'A = 2\\sqrt{3} a^2', substitution: `A = 2\\sqrt{3}(${a}^2) = ${totalArea}` },
+              { title: 'Circumradius', formula: 'R = \\frac{a}{\\sqrt{2}}', substitution: `R = \\frac{${a}}{\\sqrt{2}} = ${circumradius}` }
+            ],
+            threeData: { type: 'octahedron', edge: a }
+          };
+        }
+      }
+    ]
+  },
+
+  // 17. REGULAR ICOSAHEDRON
+  {
+    id: 'icosahedron',
+    name: 'Regular Icosahedron',
+    category: '3d',
+    description: 'Platonic solid with twenty equilateral triangular faces, twelve vertices, and thirty edges.',
+    icon: 'icosahedron',
+    methods: [
+      {
+        id: 'by_edge',
+        name: 'By Edge Length (a)',
+        description: 'Provide edge length a.',
+        inputs: [
+          { id: 'a', label: 'Edge Length (a)', symbol: 'a', type: UNIT_TYPES.LENGTH, default: 4, min: 0.0001 }
+        ],
+        calculate: (vals) => {
+          const { a } = vals;
+          const faceArea = (Math.sqrt(3) / 4) * a * a;
+          const totalArea = 5 * Math.sqrt(3) * a * a;
+          const volume = ((5 * (3 + Math.sqrt(5))) / 12) * Math.pow(a, 3);
+          const circumradius = (a / 4) * Math.sqrt(10 + 2 * Math.sqrt(5));
+          const inradius = (a / 12) * Math.sqrt(3) * (3 + Math.sqrt(5));
+          const midradius = (a / 4) * (1 + Math.sqrt(5));
+
+          return {
+            outputs: [
+              { id: 'volume', label: 'Volume (V)', symbol: 'V', value: volume, type: UNIT_TYPES.VOLUME, isPrimary: true },
+              { id: 'surface_area', label: 'Total Surface Area (A)', symbol: 'A', value: totalArea, type: UNIT_TYPES.AREA, isPrimary: true },
+              { id: 'circumradius', label: 'Circumradius (R)', symbol: 'R', value: circumradius, type: UNIT_TYPES.LENGTH, isPrimary: true },
+              { id: 'inradius', label: 'Inradius (r)', symbol: 'r', value: inradius, type: UNIT_TYPES.LENGTH },
+              { id: 'midradius', label: 'Midradius (ρ)', symbol: 'ρ', value: midradius, type: UNIT_TYPES.LENGTH },
+              { id: 'face_area', label: 'Single Face Area', symbol: 'A_f', value: faceArea, type: UNIT_TYPES.AREA }
+            ],
+            steps: [
+              { title: 'Volume', formula: 'V = \\frac{5(3 + \\sqrt{5})}{12} a^3', substitution: `V = \\frac{5(3 + \\sqrt{5})}{12}(${a}^3) = ${volume}` },
+              { title: 'Total Surface Area', formula: 'A = 5\\sqrt{3} a^2', substitution: `A = 5\\sqrt{3}(${a}^2) = ${totalArea}` },
+              { title: 'Circumradius', formula: 'R = \\frac{a}{4}\\sqrt{10 + 2\\sqrt{5}}', substitution: `R = \\frac{${a}}{4}\\sqrt{10 + 2\\sqrt{5}} = ${circumradius}` }
+            ],
+            threeData: { type: 'icosahedron', edge: a }
+          };
+        }
+      }
+    ]
+  },
+
+  // 18. REGULAR DODECAHEDRON
+  {
+    id: 'dodecahedron',
+    name: 'Regular Dodecahedron',
+    category: '3d',
+    description: 'Platonic solid with twelve congruent regular pentagonal faces, twenty vertices, and thirty edges.',
+    icon: 'dodecahedron',
+    methods: [
+      {
+        id: 'by_edge',
+        name: 'By Edge Length (a)',
+        description: 'Provide edge length a.',
+        inputs: [
+          { id: 'a', label: 'Edge Length (a)', symbol: 'a', type: UNIT_TYPES.LENGTH, default: 4, min: 0.0001 }
+        ],
+        calculate: (vals) => {
+          const { a } = vals;
+          const pentagonConst = Math.sqrt(25 + 10 * Math.sqrt(5));
+          const faceArea = (1 / 4) * pentagonConst * a * a;
+          const totalArea = 3 * pentagonConst * a * a;
+          const volume = ((15 + 7 * Math.sqrt(5)) / 4) * Math.pow(a, 3);
+          const circumradius = (a / 4) * (Math.sqrt(3) + Math.sqrt(15));
+          const inradius = (a / 20) * Math.sqrt(250 + 110 * Math.sqrt(5));
+          const midradius = (a / 4) * (3 + Math.sqrt(5));
+
+          return {
+            outputs: [
+              { id: 'volume', label: 'Volume (V)', symbol: 'V', value: volume, type: UNIT_TYPES.VOLUME, isPrimary: true },
+              { id: 'surface_area', label: 'Total Surface Area (A)', symbol: 'A', value: totalArea, type: UNIT_TYPES.AREA, isPrimary: true },
+              { id: 'circumradius', label: 'Circumradius (R)', symbol: 'R', value: circumradius, type: UNIT_TYPES.LENGTH, isPrimary: true },
+              { id: 'inradius', label: 'Inradius (r)', symbol: 'r', value: inradius, type: UNIT_TYPES.LENGTH },
+              { id: 'midradius', label: 'Midradius (ρ)', symbol: 'ρ', value: midradius, type: UNIT_TYPES.LENGTH },
+              { id: 'face_area', label: 'Single Pentagonal Face Area', symbol: 'A_f', value: faceArea, type: UNIT_TYPES.AREA }
+            ],
+            steps: [
+              { title: 'Volume', formula: 'V = \\frac{15 + 7\\sqrt{5}}{4} a^3', substitution: `V = \\frac{15 + 7\\sqrt{5}}{4}(${a}^3) = ${volume}` },
+              { title: 'Total Surface Area', formula: 'A = 3\\sqrt{25 + 10\\sqrt{5}} a^2', substitution: `A = 3\\sqrt{25 + 10\\sqrt{5}}(${a}^2) = ${totalArea}` },
+              { title: 'Circumradius', formula: 'R = \\frac{a}{4}(\\sqrt{3} + \\sqrt{15})', substitution: `R = \\frac{${a}}{4}(\\sqrt{3} + \\sqrt{15}) = ${circumradius}` }
+            ],
+            threeData: { type: 'dodecahedron', edge: a }
+          };
+        }
+      }
+    ]
   }
 ];

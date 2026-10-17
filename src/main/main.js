@@ -17,6 +17,7 @@ function createWindow() {
     title: 'GeoFluent Geometry Calculator',
     icon: path.join(__dirname, '../../assets/icon.png'),
     frame: false,
+    show: false, // Performance: avoid white/unpainted flash during initial load
     backgroundMaterial: 'mica', // Windows 11 native Mica backdrop
     titleBarStyle: 'hidden',
     backgroundColor: '#18191c',
@@ -28,13 +29,25 @@ function createWindow() {
     }
   });
 
+  mainWindow.once('ready-to-show', () => {
+    mainWindow.show();
+  });
+
   mainWindow.webContents.on('console-message', (event, level, message, line, sourceId) => {
     console.log(`[RENDERER LOG ${level}] ${message} (${sourceId}:${line})`);
   });
 
   mainWindow.loadFile(path.join(__dirname, '../renderer/index.html'));
 
-  // Window IPC controls
+  // Window IPC controls & state broadcasting
+  mainWindow.on('maximize', () => {
+    if (mainWindow) mainWindow.webContents.send('window-maximized-state', true);
+  });
+
+  mainWindow.on('unmaximize', () => {
+    if (mainWindow) mainWindow.webContents.send('window-maximized-state', false);
+  });
+
   ipcMain.on('window-minimize', () => {
     if (mainWindow) mainWindow.minimize();
   });

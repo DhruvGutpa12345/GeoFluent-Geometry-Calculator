@@ -90,9 +90,14 @@ export const Store = {
     if (entry.steps && entry.steps.length > 0) {
       md += `\n## Step-by-Step Derivation\n\n`;
       entry.steps.forEach((step, idx) => {
+        const cleanSubst = (step.substitution || '').replace(/(\d+\.\d+)/g, (match) => {
+          const num = parseFloat(match);
+          if (isNaN(num)) return match;
+          return (Math.round(num * 10000) / 10000).toString();
+        });
         md += `### ${idx + 1}. ${step.title}\n`;
         md += `- Formula: \`${step.formula}\`\n`;
-        md += `- Substitution: ${step.substitution}\n\n`;
+        md += `- Substitution: ${cleanSubst}\n\n`;
       });
     }
     return md;

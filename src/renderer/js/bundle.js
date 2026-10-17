@@ -97,6 +97,18 @@
       useGrouping: true
     });
   }
+  function fmt(val, precision = 4) {
+    if (val === null || val === void 0 || isNaN(val)) return "0";
+    if (!isFinite(val)) return val > 0 ? "Infinity" : "-Infinity";
+    const num = Number(val);
+    if (Math.abs(num) === 0) return "0";
+    if (Math.abs(num) >= 1e9 || Math.abs(num) < 1e-4 && Math.abs(num) > 0) {
+      return num.toExponential(precision);
+    }
+    const factor = Math.pow(10, precision);
+    const rounded = Math.round(num * factor) / factor;
+    return rounded.toString();
+  }
 
   // src/renderer/js/math/formulas2d.js
   var SHAPES_2D = [
@@ -123,19 +135,19 @@
               throw new Error("Triangle Inequality Violated: The sum of any two sides must be strictly greater than the third side.");
             }
             const s = (a + b + c) / 2;
-            const area = Math.sqrt(Math.max(0, s * (s - a) * (s - b) * (s - c)));
+            const area2 = Math.sqrt(Math.max(0, s * (s - a) * (s - b) * (s - c)));
             const perimeter = a + b + c;
             const alpha = Math.acos(Math.max(-1, Math.min(1, (b * b + c * c - a * a) / (2 * b * c))));
             const beta = Math.acos(Math.max(-1, Math.min(1, (a * a + c * c - b * b) / (2 * a * c))));
             const gamma = Math.PI - alpha - beta;
-            const ha = 2 * area / a;
-            const hb = 2 * area / b;
-            const hc = 2 * area / c;
+            const ha = 2 * area2 / a;
+            const hb = 2 * area2 / b;
+            const hc = 2 * area2 / c;
             const ma = 0.5 * Math.sqrt(Math.max(0, 2 * b * b + 2 * c * c - a * a));
             const mb = 0.5 * Math.sqrt(Math.max(0, 2 * a * a + 2 * c * c - b * b));
             const mc = 0.5 * Math.sqrt(Math.max(0, 2 * a * a + 2 * b * b - c * c));
-            const inradius = area / s;
-            const circumradius = a * b * c / (4 * area);
+            const inradius = area2 / s;
+            const circumradius = a * b * c / (4 * area2);
             const sidesSorted = [a, b, c].sort((x, y) => x - y);
             let sideType = "Scalene";
             if (Math.abs(a - b) < 1e-9 && Math.abs(b - c) < 1e-9) sideType = "Equilateral";
@@ -146,7 +158,7 @@
             else if (pythDiff < 0) angleType = "Obtuse";
             return {
               outputs: [
-                { id: "area", label: "Area (A)", symbol: "A", value: area, type: UNIT_TYPES.AREA, isPrimary: true },
+                { id: "area", label: "Area (A)", symbol: "A", value: area2, type: UNIT_TYPES.AREA, isPrimary: true },
                 { id: "perimeter", label: "Perimeter (P)", symbol: "P", value: perimeter, type: UNIT_TYPES.LENGTH, isPrimary: true },
                 { id: "semi_perimeter", label: "Semi-perimeter (s)", symbol: "s", value: s, type: UNIT_TYPES.LENGTH },
                 { id: "angle_alpha", label: "Angle \u03B1 (opposite a)", symbol: "\u03B1", value: alpha, type: UNIT_TYPES.ANGLE },
@@ -164,9 +176,9 @@
               ],
               steps: [
                 { title: "Semi-perimeter calculation", formula: "s = (a + b + c) / 2", substitution: `s = (${a} + ${b} + ${c}) / 2 = ${s}` },
-                { title: "Heron's Area Formula", formula: "A = \\sqrt{s(s - a)(s - b)(s - c)}", substitution: `A = \\sqrt{${s}(${s - a})(${s - b})(${s - c})} = ${area}` },
-                { title: "Inradius", formula: "r = A / s", substitution: `r = ${area} / ${s} = ${inradius}` },
-                { title: "Circumradius", formula: "R = (a \\cdot b \\cdot c) / (4A)", substitution: `R = (${a} \\cdot ${b} \\cdot ${c}) / (4 \\cdot ${area}) = ${circumradius}` }
+                { title: "Heron's Area Formula", formula: "A = \\sqrt{s(s - a)(s - b)(s - c)}", substitution: `A = \\sqrt{${s}(${s - a})(${s - b})(${s - c})} = ${area2}` },
+                { title: "Inradius", formula: "r = A / s", substitution: `r = ${area2} / ${s} = ${inradius}` },
+                { title: "Circumradius", formula: "R = (a \\cdot b \\cdot c) / (4A)", substitution: `R = (${a} \\cdot ${b} \\cdot ${c}) / (4 \\cdot ${area2}) = ${circumradius}` }
               ],
               svgData: {
                 shape: "polygon",
@@ -191,17 +203,17 @@
           ],
           calculate: (vals) => {
             const { b, h } = vals;
-            const area = 0.5 * b * h;
+            const area2 = 0.5 * b * h;
             const leg = Math.sqrt((b / 2) ** 2 + h ** 2);
             const perimeter = b + 2 * leg;
             return {
               outputs: [
-                { id: "area", label: "Area (A)", symbol: "A", value: area, type: UNIT_TYPES.AREA, isPrimary: true },
+                { id: "area", label: "Area (A)", symbol: "A", value: area2, type: UNIT_TYPES.AREA, isPrimary: true },
                 { id: "perimeter", label: "Perimeter (P, Isosceles)", symbol: "P", value: perimeter, type: UNIT_TYPES.LENGTH, isPrimary: true },
                 { id: "leg", label: "Side Leg (Isosceles)", symbol: "a = c", value: leg, type: UNIT_TYPES.LENGTH }
               ],
               steps: [
-                { title: "Triangle Area", formula: "A = \\frac{1}{2} b \\cdot h", substitution: `A = 0.5 \\cdot ${b} \\cdot ${h} = ${area}` }
+                { title: "Triangle Area", formula: "A = \\frac{1}{2} b \\cdot h", substitution: `A = 0.5 \\cdot ${b} \\cdot ${h} = ${area2}` }
               ],
               svgData: {
                 shape: "polygon",
@@ -226,21 +238,21 @@
           calculate: (vals) => {
             const { a, b, gamma } = vals;
             const c = Math.sqrt(Math.max(0, a * a + b * b - 2 * a * b * Math.cos(gamma)));
-            const area = 0.5 * a * b * Math.sin(gamma);
+            const area2 = 0.5 * a * b * Math.sin(gamma);
             const perimeter = a + b + c;
             const alpha = Math.asin(Math.max(-1, Math.min(1, a * Math.sin(gamma) / c)));
             const beta = Math.PI - gamma - alpha;
             return {
               outputs: [
                 { id: "c", label: "Third Side (c)", symbol: "c", value: c, type: UNIT_TYPES.LENGTH, isPrimary: true },
-                { id: "area", label: "Area (A)", symbol: "A", value: area, type: UNIT_TYPES.AREA, isPrimary: true },
+                { id: "area", label: "Area (A)", symbol: "A", value: area2, type: UNIT_TYPES.AREA, isPrimary: true },
                 { id: "perimeter", label: "Perimeter (P)", symbol: "P", value: perimeter, type: UNIT_TYPES.LENGTH, isPrimary: true },
                 { id: "alpha", label: "Angle \u03B1", symbol: "\u03B1", value: alpha, type: UNIT_TYPES.ANGLE },
                 { id: "beta", label: "Angle \u03B2", symbol: "\u03B2", value: beta, type: UNIT_TYPES.ANGLE }
               ],
               steps: [
                 { title: "Law of Cosines for side c", formula: "c = \\sqrt{a^2 + b^2 - 2ab\\cos(\\gamma)}", substitution: `c = \\sqrt{${a}^2 + ${b}^2 - 2(${a})(${b})\\cos(${gamma})} = ${c}` },
-                { title: "Area from SAS", formula: "A = \\frac{1}{2}ab\\sin(\\gamma)", substitution: `A = 0.5 \\cdot ${a} \\cdot ${b} \\cdot \\sin(${gamma}) = ${area}` }
+                { title: "Area from SAS", formula: "A = \\frac{1}{2}ab\\sin(\\gamma)", substitution: `A = 0.5 \\cdot ${a} \\cdot ${b} \\cdot \\sin(${gamma}) = ${area2}` }
               ],
               svgData: {
                 shape: "polygon",
@@ -262,21 +274,21 @@
           ],
           calculate: (vals) => {
             const { a } = vals;
-            const area = Math.sqrt(3) / 4 * a * a;
+            const area2 = Math.sqrt(3) / 4 * a * a;
             const perimeter = 3 * a;
             const height = Math.sqrt(3) / 2 * a;
             const inradius = a / (2 * Math.sqrt(3));
             const circumradius = a / Math.sqrt(3);
             return {
               outputs: [
-                { id: "area", label: "Area (A)", symbol: "A", value: area, type: UNIT_TYPES.AREA, isPrimary: true },
+                { id: "area", label: "Area (A)", symbol: "A", value: area2, type: UNIT_TYPES.AREA, isPrimary: true },
                 { id: "perimeter", label: "Perimeter (P)", symbol: "P", value: perimeter, type: UNIT_TYPES.LENGTH, isPrimary: true },
                 { id: "height", label: "Altitude / Height (h)", symbol: "h", value: height, type: UNIT_TYPES.LENGTH },
                 { id: "inradius", label: "Inradius (r)", symbol: "r", value: inradius, type: UNIT_TYPES.LENGTH },
                 { id: "circumradius", label: "Circumradius (R)", symbol: "R", value: circumradius, type: UNIT_TYPES.LENGTH }
               ],
               steps: [
-                { title: "Equilateral Area", formula: "A = \\frac{\\sqrt{3}}{4} a^2", substitution: `A = (\\sqrt{3}/4) \\cdot ${a}^2 = ${area}` },
+                { title: "Equilateral Area", formula: "A = \\frac{\\sqrt{3}}{4} a^2", substitution: `A = (\\sqrt{3}/4) \\cdot ${a}^2 = ${area2}` },
                 { title: "Height", formula: "h = \\frac{\\sqrt{3}}{2} a", substitution: `h = (\\sqrt{3}/2) \\cdot ${a} = ${height}` }
               ],
               svgData: {
@@ -303,7 +315,7 @@
           calculate: (vals) => {
             const { a, b } = vals;
             const c = Math.sqrt(a * a + b * b);
-            const area = 0.5 * a * b;
+            const area2 = 0.5 * a * b;
             const perimeter = a + b + c;
             const alpha = Math.atan2(a, b);
             const beta = Math.atan2(b, a);
@@ -313,7 +325,7 @@
             return {
               outputs: [
                 { id: "c", label: "Hypotenuse (c)", symbol: "c", value: c, type: UNIT_TYPES.LENGTH, isPrimary: true },
-                { id: "area", label: "Area (A)", symbol: "A", value: area, type: UNIT_TYPES.AREA, isPrimary: true },
+                { id: "area", label: "Area (A)", symbol: "A", value: area2, type: UNIT_TYPES.AREA, isPrimary: true },
                 { id: "perimeter", label: "Perimeter (P)", symbol: "P", value: perimeter, type: UNIT_TYPES.LENGTH, isPrimary: true },
                 { id: "altitudeHyp", label: "Altitude to Hypotenuse", symbol: "h_c", value: altitudeHyp, type: UNIT_TYPES.LENGTH },
                 { id: "alpha", label: "Angle \u03B1", symbol: "\u03B1", value: alpha, type: UNIT_TYPES.ANGLE },
@@ -323,7 +335,7 @@
               ],
               steps: [
                 { title: "Pythagorean Theorem", formula: "c = \\sqrt{a^2 + b^2}", substitution: `c = \\sqrt{${a}^2 + ${b}^2} = ${c}` },
-                { title: "Right Triangle Area", formula: "A = \\frac{1}{2} a \\cdot b", substitution: `A = 0.5 \\cdot ${a} \\cdot ${b} = ${area}` }
+                { title: "Right Triangle Area", formula: "A = \\frac{1}{2} a \\cdot b", substitution: `A = 0.5 \\cdot ${a} \\cdot ${b} = ${area2}` }
               ],
               svgData: {
                 shape: "polygon",
@@ -356,20 +368,20 @@
           calculate: (vals) => {
             const { a } = vals;
             const perimeter = 4 * a;
-            const area = a * a;
+            const area2 = a * a;
             const diagonal = a * Math.SQRT2;
             const inradius = a / 2;
             const circumradius = diagonal / 2;
             return {
               outputs: [
-                { id: "area", label: "Area (A)", symbol: "A", value: area, type: UNIT_TYPES.AREA, isPrimary: true },
+                { id: "area", label: "Area (A)", symbol: "A", value: area2, type: UNIT_TYPES.AREA, isPrimary: true },
                 { id: "perimeter", label: "Perimeter (P)", symbol: "P", value: perimeter, type: UNIT_TYPES.LENGTH, isPrimary: true },
                 { id: "diagonal", label: "Diagonal (d)", symbol: "d", value: diagonal, type: UNIT_TYPES.LENGTH, isPrimary: true },
                 { id: "inradius", label: "Incircle Radius (r)", symbol: "r", value: inradius, type: UNIT_TYPES.LENGTH },
                 { id: "circumradius", label: "Circumcircle Radius (R)", symbol: "R", value: circumradius, type: UNIT_TYPES.LENGTH }
               ],
               steps: [
-                { title: "Area", formula: "A = a^2", substitution: `A = ${a}^2 = ${area}` },
+                { title: "Area", formula: "A = a^2", substitution: `A = ${a}^2 = ${area2}` },
                 { title: "Perimeter", formula: "P = 4a", substitution: `P = 4 \\cdot ${a} = ${perimeter}` },
                 { title: "Diagonal", formula: "d = a\\sqrt{2}", substitution: `d = ${a}\\sqrt{2} = ${diagonal}` }
               ],
@@ -398,16 +410,16 @@
             const { d } = vals;
             const a = d / Math.SQRT2;
             const perimeter = 4 * a;
-            const area = d * d / 2;
+            const area2 = d * d / 2;
             return {
               outputs: [
                 { id: "a", label: "Side length (a)", symbol: "a", value: a, type: UNIT_TYPES.LENGTH, isPrimary: true },
-                { id: "area", label: "Area (A)", symbol: "A", value: area, type: UNIT_TYPES.AREA, isPrimary: true },
+                { id: "area", label: "Area (A)", symbol: "A", value: area2, type: UNIT_TYPES.AREA, isPrimary: true },
                 { id: "perimeter", label: "Perimeter (P)", symbol: "P", value: perimeter, type: UNIT_TYPES.LENGTH, isPrimary: true }
               ],
               steps: [
                 { title: "Side from Diagonal", formula: "a = d / \\sqrt{2}", substitution: `a = ${d} / \\sqrt{2} = ${a}` },
-                { title: "Area", formula: "A = d^2 / 2", substitution: `A = ${d}^2 / 2 = ${area}` }
+                { title: "Area", formula: "A = d^2 / 2", substitution: `A = ${d}^2 / 2 = ${area2}` }
               ],
               svgData: {
                 shape: "polygon",
@@ -464,21 +476,21 @@
           ],
           calculate: (vals) => {
             const { l, w } = vals;
-            const area = l * w;
+            const area2 = l * w;
             const perimeter = 2 * (l + w);
             const diagonal = Math.sqrt(l * l + w * w);
             const aspectRatio = l / w;
             const circumradius = diagonal / 2;
             return {
               outputs: [
-                { id: "area", label: "Area (A)", symbol: "A", value: area, type: UNIT_TYPES.AREA, isPrimary: true },
+                { id: "area", label: "Area (A)", symbol: "A", value: area2, type: UNIT_TYPES.AREA, isPrimary: true },
                 { id: "perimeter", label: "Perimeter (P)", symbol: "P", value: perimeter, type: UNIT_TYPES.LENGTH, isPrimary: true },
                 { id: "diagonal", label: "Diagonal (d)", symbol: "d", value: diagonal, type: UNIT_TYPES.LENGTH, isPrimary: true },
                 { id: "aspect_ratio", label: "Aspect Ratio (l : w)", symbol: "l:w", textValue: `${l >= w ? (l / w).toFixed(2) + " : 1" : "1 : " + (w / l).toFixed(2)}` },
                 { id: "circumradius", label: "Circumscribed Radius (R)", symbol: "R", value: circumradius, type: UNIT_TYPES.LENGTH }
               ],
               steps: [
-                { title: "Area", formula: "A = l \\cdot w", substitution: `A = ${l} \\cdot ${w} = ${area}` },
+                { title: "Area", formula: "A = l \\cdot w", substitution: `A = ${l} \\cdot ${w} = ${area2}` },
                 { title: "Perimeter", formula: "P = 2(l + w)", substitution: `P = 2(${l} + ${w}) = ${perimeter}` },
                 { title: "Diagonal", formula: "d = \\sqrt{l^2 + w^2}", substitution: `d = \\sqrt{${l}^2 + ${w}^2} = ${diagonal}` }
               ],
@@ -502,12 +514,12 @@
             const { d, l } = vals;
             if (l >= d) throw new Error("Known side must be strictly less than the diagonal.");
             const w = Math.sqrt(d * d - l * l);
-            const area = l * w;
+            const area2 = l * w;
             const perimeter = 2 * (l + w);
             return {
               outputs: [
                 { id: "w", label: "Other Side (w)", symbol: "w", value: w, type: UNIT_TYPES.LENGTH, isPrimary: true },
-                { id: "area", label: "Area (A)", symbol: "A", value: area, type: UNIT_TYPES.AREA, isPrimary: true },
+                { id: "area", label: "Area (A)", symbol: "A", value: area2, type: UNIT_TYPES.AREA, isPrimary: true },
                 { id: "perimeter", label: "Perimeter (P)", symbol: "P", value: perimeter, type: UNIT_TYPES.LENGTH, isPrimary: true }
               ],
               steps: [
@@ -541,17 +553,17 @@
             const { r } = vals;
             const diameter = 2 * r;
             const circumference = 2 * Math.PI * r;
-            const area = Math.PI * r * r;
+            const area2 = Math.PI * r * r;
             return {
               outputs: [
-                { id: "area", label: "Area (A)", symbol: "A", value: area, type: UNIT_TYPES.AREA, isPrimary: true },
+                { id: "area", label: "Area (A)", symbol: "A", value: area2, type: UNIT_TYPES.AREA, isPrimary: true },
                 { id: "circumference", label: "Circumference (C)", symbol: "C", value: circumference, type: UNIT_TYPES.LENGTH, isPrimary: true },
                 { id: "diameter", label: "Diameter (d)", symbol: "d", value: diameter, type: UNIT_TYPES.LENGTH, isPrimary: true }
               ],
               steps: [
                 { title: "Diameter", formula: "d = 2r", substitution: `d = 2 \\cdot ${r} = ${diameter}` },
                 { title: "Circumference", formula: "C = 2\\pi r", substitution: `C = 2 \\cdot \\pi \\cdot ${r} = ${circumference}` },
-                { title: "Area", formula: "A = \\pi r^2", substitution: `A = \\pi \\cdot ${r}^2 = ${area}` }
+                { title: "Area", formula: "A = \\pi r^2", substitution: `A = \\pi \\cdot ${r}^2 = ${area2}` }
               ],
               svgData: { shape: "circle", r }
             };
@@ -568,16 +580,16 @@
             const { d } = vals;
             const r = d / 2;
             const circumference = Math.PI * d;
-            const area = Math.PI * d * d / 4;
+            const area2 = Math.PI * d * d / 4;
             return {
               outputs: [
                 { id: "radius", label: "Radius (r)", symbol: "r", value: r, type: UNIT_TYPES.LENGTH, isPrimary: true },
-                { id: "area", label: "Area (A)", symbol: "A", value: area, type: UNIT_TYPES.AREA, isPrimary: true },
+                { id: "area", label: "Area (A)", symbol: "A", value: area2, type: UNIT_TYPES.AREA, isPrimary: true },
                 { id: "circumference", label: "Circumference (C)", symbol: "C", value: circumference, type: UNIT_TYPES.LENGTH, isPrimary: true }
               ],
               steps: [
                 { title: "Radius", formula: "r = d / 2", substitution: `r = ${d} / 2 = ${r}` },
-                { title: "Area", formula: "A = \\frac{\\pi d^2}{4}", substitution: `A = (\\pi \\cdot ${d}^2) / 4 = ${area}` }
+                { title: "Area", formula: "A = \\frac{\\pi d^2}{4}", substitution: `A = (\\pi \\cdot ${d}^2) / 4 = ${area2}` }
               ],
               svgData: { shape: "circle", r }
             };
@@ -630,14 +642,14 @@
             const { a, b } = vals;
             const major = Math.max(a, b);
             const minor = Math.min(a, b);
-            const area = Math.PI * major * minor;
+            const area2 = Math.PI * major * minor;
             const linearEccentricity = Math.sqrt(Math.max(0, major * major - minor * minor));
             const eccentricity = linearEccentricity / major;
             const h = (major - minor) ** 2 / (major + minor) ** 2;
             const perimeter = Math.PI * (major + minor) * (1 + 3 * h / (10 + Math.sqrt(4 - 3 * h)));
             return {
               outputs: [
-                { id: "area", label: "Area (A)", symbol: "A", value: area, type: UNIT_TYPES.AREA, isPrimary: true },
+                { id: "area", label: "Area (A)", symbol: "A", value: area2, type: UNIT_TYPES.AREA, isPrimary: true },
                 { id: "perimeter", label: "Perimeter / Circumference (P)", symbol: "P", value: perimeter, type: UNIT_TYPES.LENGTH, isPrimary: true },
                 { id: "eccentricity", label: "Eccentricity (e)", symbol: "e", textValue: eccentricity.toFixed(4) },
                 { id: "focal_dist", label: "Focal Distance (2c)", symbol: "2c", value: 2 * linearEccentricity, type: UNIT_TYPES.LENGTH },
@@ -645,7 +657,7 @@
                 { id: "minor_axis", label: "Full Minor Axis (2b)", symbol: "2b", value: 2 * minor, type: UNIT_TYPES.LENGTH }
               ],
               steps: [
-                { title: "Ellipse Area", formula: "A = \\pi a b", substitution: `A = \\pi \\cdot ${major} \\cdot ${minor} = ${area}` },
+                { title: "Ellipse Area", formula: "A = \\pi a b", substitution: `A = \\pi \\cdot ${major} \\cdot ${minor} = ${area2}` },
                 { title: "Ramanujan Perimeter Formula", formula: "P \\approx \\pi(a+b)\\left(1 + \\frac{3h}{10+\\sqrt{4-3h}}\\right)", substitution: `P \\approx ${perimeter}` },
                 { title: "Eccentricity", formula: "e = \\frac{\\sqrt{a^2 - b^2}}{a}", substitution: `e = \\frac{\\sqrt{${major}^2 - ${minor}^2}}{${major}} = ${eccentricity}` }
               ],
@@ -675,13 +687,13 @@
           calculate: (vals) => {
             const { b, a, theta } = vals;
             const height = a * Math.sin(theta);
-            const area = b * height;
+            const area2 = b * height;
             const perimeter = 2 * (a + b);
             const d1 = Math.sqrt(a * a + b * b - 2 * a * b * Math.cos(theta));
             const d2 = Math.sqrt(a * a + b * b + 2 * a * b * Math.cos(theta));
             return {
               outputs: [
-                { id: "area", label: "Area (A)", symbol: "A", value: area, type: UNIT_TYPES.AREA, isPrimary: true },
+                { id: "area", label: "Area (A)", symbol: "A", value: area2, type: UNIT_TYPES.AREA, isPrimary: true },
                 { id: "perimeter", label: "Perimeter (P)", symbol: "P", value: perimeter, type: UNIT_TYPES.LENGTH, isPrimary: true },
                 { id: "height", label: "Height (h)", symbol: "h", value: height, type: UNIT_TYPES.LENGTH },
                 { id: "d1", label: "Diagonal 1 (d\u2081)", symbol: "d\u2081", value: d1, type: UNIT_TYPES.LENGTH },
@@ -689,7 +701,7 @@
               ],
               steps: [
                 { title: "Height", formula: "h = a \\cdot \\sin(\\theta)", substitution: `h = ${a} \\cdot \\sin(${theta}) = ${height}` },
-                { title: "Area", formula: "A = b \\cdot h", substitution: `A = ${b} \\cdot ${height} = ${area}` },
+                { title: "Area", formula: "A = b \\cdot h", substitution: `A = ${b} \\cdot ${height} = ${area2}` },
                 { title: "Perimeter", formula: "P = 2(a + b)", substitution: `P = 2(${a} + ${b}) = ${perimeter}` }
               ],
               svgData: {
@@ -724,21 +736,21 @@
           ],
           calculate: (vals) => {
             const { d1, d2 } = vals;
-            const area = 0.5 * d1 * d2;
+            const area2 = 0.5 * d1 * d2;
             const a = 0.5 * Math.sqrt(d1 * d1 + d2 * d2);
             const perimeter = 4 * a;
-            const height = area / a;
+            const height = area2 / a;
             const inradius = height / 2;
             return {
               outputs: [
-                { id: "area", label: "Area (A)", symbol: "A", value: area, type: UNIT_TYPES.AREA, isPrimary: true },
+                { id: "area", label: "Area (A)", symbol: "A", value: area2, type: UNIT_TYPES.AREA, isPrimary: true },
                 { id: "perimeter", label: "Perimeter (P)", symbol: "P", value: perimeter, type: UNIT_TYPES.LENGTH, isPrimary: true },
                 { id: "a", label: "Side Length (a)", symbol: "a", value: a, type: UNIT_TYPES.LENGTH, isPrimary: true },
                 { id: "height", label: "Height (h)", symbol: "h", value: height, type: UNIT_TYPES.LENGTH },
                 { id: "inradius", label: "Inradius (r)", symbol: "r", value: inradius, type: UNIT_TYPES.LENGTH }
               ],
               steps: [
-                { title: "Area from Diagonals", formula: "A = \\frac{1}{2} d_1 d_2", substitution: `A = 0.5 \\cdot ${d1} \\cdot ${d2} = ${area}` },
+                { title: "Area from Diagonals", formula: "A = \\frac{1}{2} d_1 d_2", substitution: `A = 0.5 \\cdot ${d1} \\cdot ${d2} = ${area2}` },
                 { title: "Side Length", formula: "a = \\frac{1}{2}\\sqrt{d_1^2 + d_2^2}", substitution: `a = 0.5 \\cdot \\sqrt{${d1}^2 + ${d2}^2} = ${a}` },
                 { title: "Perimeter", formula: "P = 4a", substitution: `P = 4 \\cdot ${a} = ${perimeter}` }
               ],
@@ -776,19 +788,19 @@
           ],
           calculate: (vals) => {
             const { a, b, h } = vals;
-            const area = 0.5 * (a + b) * h;
+            const area2 = 0.5 * (a + b) * h;
             const midline = 0.5 * (a + b);
             const leg = Math.sqrt(h * h + ((b - a) / 2) ** 2);
             const perimeter = a + b + 2 * leg;
             return {
               outputs: [
-                { id: "area", label: "Area (A)", symbol: "A", value: area, type: UNIT_TYPES.AREA, isPrimary: true },
+                { id: "area", label: "Area (A)", symbol: "A", value: area2, type: UNIT_TYPES.AREA, isPrimary: true },
                 { id: "midline", label: "Median / Midline (m)", symbol: "m", value: midline, type: UNIT_TYPES.LENGTH, isPrimary: true },
                 { id: "perimeter", label: "Perimeter (Isosceles)", symbol: "P", value: perimeter, type: UNIT_TYPES.LENGTH },
                 { id: "leg", label: "Side Leg (Isosceles)", symbol: "c = d", value: leg, type: UNIT_TYPES.LENGTH }
               ],
               steps: [
-                { title: "Trapezoid Area", formula: "A = \\frac{a + b}{2} \\cdot h", substitution: `A = \\frac{${a} + ${b}}{2} \\cdot ${h} = ${area}` },
+                { title: "Trapezoid Area", formula: "A = \\frac{a + b}{2} \\cdot h", substitution: `A = \\frac{${a} + ${b}}{2} \\cdot ${h} = ${area2}` },
                 { title: "Median", formula: "m = \\frac{a + b}{2}", substitution: `m = (${a} + ${b})/2 = ${midline}` }
               ],
               svgData: {
@@ -827,7 +839,7 @@
             const perimeter = n * s;
             const apothem = s / (2 * Math.tan(Math.PI / n));
             const circumradius = s / (2 * Math.sin(Math.PI / n));
-            const area = 0.5 * perimeter * apothem;
+            const area2 = 0.5 * perimeter * apothem;
             const interiorAngle = (n - 2) * Math.PI / n;
             const exteriorAngle = 2 * Math.PI / n;
             const diagonals = n * (n - 3) / 2;
@@ -851,7 +863,7 @@
             return {
               outputs: [
                 { id: "polygon_name", label: "Polygon Name", symbol: "Name", textValue: name },
-                { id: "area", label: "Area (A)", symbol: "A", value: area, type: UNIT_TYPES.AREA, isPrimary: true },
+                { id: "area", label: "Area (A)", symbol: "A", value: area2, type: UNIT_TYPES.AREA, isPrimary: true },
                 { id: "perimeter", label: "Perimeter (P)", symbol: "P", value: perimeter, type: UNIT_TYPES.LENGTH, isPrimary: true },
                 { id: "apothem", label: "Apothem / Inradius (r)", symbol: "r", value: apothem, type: UNIT_TYPES.LENGTH },
                 { id: "circumradius", label: "Circumradius (R)", symbol: "R", value: circumradius, type: UNIT_TYPES.LENGTH },
@@ -862,7 +874,7 @@
               steps: [
                 { title: "Perimeter", formula: "P = n \\cdot s", substitution: `P = ${n} \\cdot ${s} = ${perimeter}` },
                 { title: "Apothem (Inradius)", formula: "r = \\frac{s}{2\\tan(\\pi / n)}", substitution: `r = \\frac{${s}}{2\\tan(\\pi / ${n})} = ${apothem}` },
-                { title: "Area", formula: "A = \\frac{1}{2} P \\cdot r", substitution: `A = 0.5 \\cdot ${perimeter} \\cdot ${apothem} = ${area}` }
+                { title: "Area", formula: "A = \\frac{1}{2} P \\cdot r", substitution: `A = 0.5 \\cdot ${perimeter} \\cdot ${apothem} = ${area2}` }
               ],
               svgData: { shape: "polygon", points, inradius: apothem, circumradius }
             };
@@ -933,21 +945,315 @@
             const { R, r } = vals;
             if (r >= R) throw new Error("Inner radius (r) must be strictly less than outer radius (R).");
             const width = R - r;
-            const area = Math.PI * (R * R - r * r);
+            const area2 = Math.PI * (R * R - r * r);
             const outerCircumference = 2 * Math.PI * R;
             const innerCircumference = 2 * Math.PI * r;
             return {
               outputs: [
-                { id: "area", label: "Annulus Area (A)", symbol: "A", value: area, type: UNIT_TYPES.AREA, isPrimary: true },
+                { id: "area", label: "Annulus Area (A)", symbol: "A", value: area2, type: UNIT_TYPES.AREA, isPrimary: true },
                 { id: "width", label: "Ring Width (w)", symbol: "w", value: width, type: UNIT_TYPES.LENGTH, isPrimary: true },
                 { id: "outer_c", label: "Outer Circumference (C_out)", symbol: "C_out", value: outerCircumference, type: UNIT_TYPES.LENGTH },
                 { id: "inner_c", label: "Inner Circumference (C_in)", symbol: "C_in", value: innerCircumference, type: UNIT_TYPES.LENGTH }
               ],
               steps: [
-                { title: "Annulus Area", formula: "A = \\pi(R^2 - r^2)", substitution: `A = \\pi(${R}^2 - ${r}^2) = ${area}` },
+                { title: "Annulus Area", formula: "A = \\pi(R^2 - r^2)", substitution: `A = \\pi(${R}^2 - ${r}^2) = ${area2}` },
                 { title: "Ring Width", formula: "w = R - r", substitution: `w = ${R} - ${r} = ${width}` }
               ],
               svgData: { shape: "annulus", R, r }
+            };
+          }
+        }
+      ]
+    },
+    // 12. KITE (DELTOID)
+    {
+      id: "kite",
+      name: "Kite (Deltoid)",
+      category: "2d",
+      description: "Quadrilateral with two distinct pairs of equal-length adjacent sides and perpendicular diagonals.",
+      icon: "kite",
+      methods: [
+        {
+          id: "diagonals",
+          name: "Two Diagonals (d\u2081, d\u2082)",
+          description: "Provide perpendicular diagonals d1 (horizontal) and d2 (vertical, split at ratio 1:2).",
+          inputs: [
+            { id: "d1", label: "Diagonal 1 (d\u2081)", symbol: "d\u2081", type: UNIT_TYPES.LENGTH, default: 6, min: 1e-4 },
+            { id: "d2", label: "Diagonal 2 (d\u2082)", symbol: "d\u2082", type: UNIT_TYPES.LENGTH, default: 8, min: 1e-4 }
+          ],
+          calculate: (vals) => {
+            const { d1, d2 } = vals;
+            const area2 = 0.5 * d1 * d2;
+            const d2_top = d2 / 3;
+            const d2_bot = 2 * d2 / 3;
+            const a = Math.sqrt((d1 / 2) ** 2 + d2_top ** 2);
+            const b = Math.sqrt((d1 / 2) ** 2 + d2_bot ** 2);
+            const perimeter = 2 * (a + b);
+            const inradius = area2 / (a + b);
+            return {
+              outputs: [
+                { id: "area", label: "Area (A)", symbol: "A", value: area2, type: UNIT_TYPES.AREA, isPrimary: true },
+                { id: "perimeter", label: "Perimeter (P)", symbol: "P", value: perimeter, type: UNIT_TYPES.LENGTH, isPrimary: true },
+                { id: "side_a", label: "Top Side (a)", symbol: "a", value: a, type: UNIT_TYPES.LENGTH },
+                { id: "side_b", label: "Bottom Side (b)", symbol: "b", value: b, type: UNIT_TYPES.LENGTH },
+                { id: "inradius", label: "Inradius (r)", symbol: "r", value: inradius, type: UNIT_TYPES.LENGTH }
+              ],
+              steps: [
+                { title: "Kite Area Formula", formula: "A = \\frac{1}{2} d_1 d_2", substitution: `A = 0.5 \\cdot ${fmt(d1)} \\cdot ${fmt(d2)} = ${fmt(area2)}` },
+                { title: "Perimeter", formula: "P = 2(a + b)", substitution: `P = 2(${fmt(a)} + ${fmt(b)}) = ${fmt(perimeter)}` }
+              ],
+              svgData: {
+                shape: "polygon",
+                points: [
+                  { x: d1 / 2, y: 0, label: "Top" },
+                  { x: d1, y: d2_top, label: "Right" },
+                  { x: d1 / 2, y: d2, label: "Bottom" },
+                  { x: 0, y: d2_top, label: "Left" }
+                ],
+                inradius
+              }
+            };
+          }
+        }
+      ]
+    },
+    // 13. ISOSCELES TRAPEZOID
+    {
+      id: "isosceles_trapezoid",
+      name: "Isosceles Trapezoid",
+      category: "2d",
+      description: "Convex quadrilateral with a line of symmetry bisecting one pair of opposite parallel sides.",
+      icon: "trapezoid",
+      methods: [
+        {
+          id: "bases_leg",
+          name: "Parallel Bases & Leg (a, b, c)",
+          description: "Provide top base a, bottom base b, and equal legs c.",
+          inputs: [
+            { id: "a", label: "Top Base (a)", symbol: "a", type: UNIT_TYPES.LENGTH, default: 4, min: 1e-4 },
+            { id: "b", label: "Bottom Base (b)", symbol: "b", type: UNIT_TYPES.LENGTH, default: 10, min: 1e-4 },
+            { id: "c", label: "Leg (c)", symbol: "c", type: UNIT_TYPES.LENGTH, default: 5, min: 1e-4 }
+          ],
+          calculate: (vals) => {
+            const { a, b, c } = vals;
+            const diff = Math.abs(b - a) / 2;
+            if (c <= diff) throw new Error("Leg length (c) must be strictly greater than half base difference (|b-a|/2).");
+            const h = Math.sqrt(c * c - diff * diff);
+            const area2 = 0.5 * (a + b) * h;
+            const perimeter = a + b + 2 * c;
+            const diagonal = Math.sqrt(a * b + c * c);
+            const midline = (a + b) / 2;
+            const circumradius = c * diagonal * Math.sqrt(a * b + c * c) / (4 * area2);
+            return {
+              outputs: [
+                { id: "area", label: "Area (A)", symbol: "A", value: area2, type: UNIT_TYPES.AREA, isPrimary: true },
+                { id: "perimeter", label: "Perimeter (P)", symbol: "P", value: perimeter, type: UNIT_TYPES.LENGTH, isPrimary: true },
+                { id: "height", label: "Vertical Height (h)", symbol: "h", value: h, type: UNIT_TYPES.LENGTH },
+                { id: "diagonal", label: "Diagonal (d)", symbol: "d", value: diagonal, type: UNIT_TYPES.LENGTH },
+                { id: "midline", label: "Median / Midline (m)", symbol: "m", value: midline, type: UNIT_TYPES.LENGTH },
+                { id: "circumradius", label: "Circumradius (R)", symbol: "R", value: circumradius, type: UNIT_TYPES.LENGTH }
+              ],
+              steps: [
+                { title: "Height Calculation", formula: "h = \\sqrt{c^2 - ((b - a)/2)^2}", substitution: `h = \\sqrt{${fmt(c)}^2 - ${fmt(diff)}^2} = ${fmt(h)}` },
+                { title: "Area", formula: "A = \\frac{a + b}{2} \\cdot h", substitution: `A = (${fmt(a)} + ${fmt(b)})/2 \\cdot ${fmt(h)} = ${fmt(area2)}` },
+                { title: "Diagonal length", formula: "d = \\sqrt{ab + c^2}", substitution: `d = \\sqrt{${fmt(a)}\\cdot${fmt(b)} + ${fmt(c)}^2} = ${fmt(diagonal)}` }
+              ],
+              svgData: {
+                shape: "polygon",
+                points: [
+                  { x: 0, y: 0 },
+                  { x: b, y: 0 },
+                  { x: b - diff, y: h },
+                  { x: diff, y: h }
+                ],
+                circumradius
+              }
+            };
+          }
+        }
+      ]
+    },
+    // 14. CIRCULAR SEGMENT
+    {
+      id: "circular_segment",
+      name: "Circular Segment",
+      category: "2d",
+      description: "Region of a circle cut off from the rest by a straight secant or chord.",
+      icon: "sector",
+      methods: [
+        {
+          id: "radius_angle",
+          name: "Radius & Central Angle (r, \u03B8)",
+          description: "Provide circle radius r and central angle \u03B8.",
+          inputs: [
+            { id: "r", label: "Radius (r)", symbol: "r", type: UNIT_TYPES.LENGTH, default: 6, min: 1e-4 },
+            { id: "theta", label: "Central Angle (\u03B8)", symbol: "\u03B8", type: UNIT_TYPES.ANGLE, default: 60 * Math.PI / 180, min: 1e-4, max: 2 * Math.PI }
+          ],
+          calculate: (vals) => {
+            const { r, theta } = vals;
+            const chord = 2 * r * Math.sin(theta / 2);
+            const sagitta = r * (1 - Math.cos(theta / 2));
+            const arcLength = r * theta;
+            const sectorArea = 0.5 * r * r * theta;
+            const triangleArea = 0.5 * r * r * Math.sin(theta);
+            const segmentArea = sectorArea - triangleArea;
+            const perimeter = chord + arcLength;
+            return {
+              outputs: [
+                { id: "segment_area", label: "Segment Area (A_seg)", symbol: "A_seg", value: segmentArea, type: UNIT_TYPES.AREA, isPrimary: true },
+                { id: "sagitta", label: "Sagitta / Height (h)", symbol: "h", value: sagitta, type: UNIT_TYPES.LENGTH, isPrimary: true },
+                { id: "chord", label: "Chord Length (c)", symbol: "c", value: chord, type: UNIT_TYPES.LENGTH },
+                { id: "arc_length", label: "Arc Length (s)", symbol: "s", value: arcLength, type: UNIT_TYPES.LENGTH },
+                { id: "perimeter", label: "Segment Perimeter", symbol: "P", value: perimeter, type: UNIT_TYPES.LENGTH }
+              ],
+              steps: [
+                { title: "Segment Area", formula: "A = \\frac{1}{2}r^2(\\theta - \\sin\\theta)", substitution: `A = 0.5 \\cdot ${fmt(r)}^2(${fmt(theta)} - \\sin(${fmt(theta)})) = ${fmt(segmentArea)}` },
+                { title: "Sagitta (Arch Height)", formula: "h = r(1 - \\cos(\\theta / 2))", substitution: `h = ${fmt(r)}(1 - \\cos(${fmt(theta / 2)})) = ${fmt(sagitta)}` }
+              ],
+              svgData: { shape: "sector", r, theta }
+            };
+          }
+        }
+      ]
+    },
+    // 15. ANNULUS SECTOR (RING SECTOR)
+    {
+      id: "annulus_sector",
+      name: "Annulus Sector (Ring Sector)",
+      category: "2d",
+      description: "Portion of an annulus cut by two radial lines at an angle \u03B8.",
+      icon: "annulus",
+      methods: [
+        {
+          id: "radii_angle",
+          name: "Outer & Inner Radii and Angle (R, r, \u03B8)",
+          description: "Provide outer radius R, inner radius r, and angle \u03B8.",
+          inputs: [
+            { id: "R", label: "Outer Radius (R)", symbol: "R", type: UNIT_TYPES.LENGTH, default: 8, min: 1e-4 },
+            { id: "r", label: "Inner Radius (r)", symbol: "r", type: UNIT_TYPES.LENGTH, default: 5, min: 1e-4 },
+            { id: "theta", label: "Sector Angle (\u03B8)", symbol: "\u03B8", type: UNIT_TYPES.ANGLE, default: 90 * Math.PI / 180, min: 1e-4, max: 2 * Math.PI }
+          ],
+          calculate: (vals) => {
+            const { R, r, theta } = vals;
+            if (r >= R) throw new Error("Inner radius (r) must be strictly less than outer radius (R).");
+            const width = R - r;
+            const area2 = 0.5 * (R * R - r * r) * theta;
+            const outerArc = R * theta;
+            const innerArc = r * theta;
+            const perimeter = 2 * width + outerArc + innerArc;
+            return {
+              outputs: [
+                { id: "area", label: "Sector Area (A)", symbol: "A", value: area2, type: UNIT_TYPES.AREA, isPrimary: true },
+                { id: "perimeter", label: "Total Perimeter (P)", symbol: "P", value: perimeter, type: UNIT_TYPES.LENGTH, isPrimary: true },
+                { id: "width", label: "Radial Width (w)", symbol: "w", value: width, type: UNIT_TYPES.LENGTH },
+                { id: "outer_arc", label: "Outer Arc Length", symbol: "s_out", value: outerArc, type: UNIT_TYPES.LENGTH },
+                { id: "inner_arc", label: "Inner Arc Length", symbol: "s_in", value: innerArc, type: UNIT_TYPES.LENGTH }
+              ],
+              steps: [
+                { title: "Annulus Sector Area", formula: "A = \\frac{1}{2}(R^2 - r^2)\\theta", substitution: `A = 0.5(${fmt(R)}^2 - ${fmt(r)}^2)\\cdot ${fmt(theta)} = ${fmt(area2)}` },
+                { title: "Perimeter", formula: "P = 2(R - r) + (R + r)\\theta", substitution: `P = 2(${fmt(width)}) + (${fmt(R + r)})\\cdot ${fmt(theta)} = ${fmt(perimeter)}` }
+              ],
+              svgData: { shape: "annulus", R, r }
+            };
+          }
+        }
+      ]
+    },
+    // 16. REGULAR STAR POLYGON
+    {
+      id: "star_polygon",
+      name: "Regular Star Polygon",
+      category: "2d",
+      description: "Equiangular star polygon with alternating outer points and inner vertices (Pentagram, Hexagram, etc.).",
+      icon: "polygon",
+      methods: [
+        {
+          id: "star_params",
+          name: "Points Count (n) & Radii (R, r)",
+          description: "Provide number of star points n, outer point radius R, and inner valley radius r.",
+          inputs: [
+            { id: "n", label: "Points Count (n)", symbol: "n", type: UNIT_TYPES.COUNT, default: 5, min: 3, max: 24 },
+            { id: "R", label: "Outer Radius (R)", symbol: "R", type: UNIT_TYPES.LENGTH, default: 8, min: 1e-4 },
+            { id: "r", label: "Inner Radius (r)", symbol: "r", type: UNIT_TYPES.LENGTH, default: 3.5, min: 1e-4 }
+          ],
+          calculate: (vals) => {
+            const n = Math.round(vals.n);
+            const { R, r } = vals;
+            if (r >= R) throw new Error("Inner radius (r) must be strictly less than outer radius (R).");
+            const angleStep = Math.PI / n;
+            const edge = Math.sqrt(R * R + r * r - 2 * R * r * Math.cos(angleStep));
+            const perimeter = 2 * n * edge;
+            const area2 = n * R * r * Math.sin(angleStep);
+            const points = [];
+            for (let i = 0; i < 2 * n; i++) {
+              const rad = i % 2 === 0 ? R : r;
+              const a = i * angleStep - Math.PI / 2;
+              points.push({
+                x: R + rad * Math.cos(a),
+                y: R + rad * Math.sin(a)
+              });
+            }
+            return {
+              outputs: [
+                { id: "area", label: "Star Area (A)", symbol: "A", value: area2, type: UNIT_TYPES.AREA, isPrimary: true },
+                { id: "perimeter", label: "Perimeter (P)", symbol: "P", value: perimeter, type: UNIT_TYPES.LENGTH, isPrimary: true },
+                { id: "edge", label: "Single Edge Length", symbol: "e", value: edge, type: UNIT_TYPES.LENGTH },
+                { id: "span", label: "Tip-to-Tip Span", symbol: "2R", value: 2 * R, type: UNIT_TYPES.LENGTH }
+              ],
+              steps: [
+                { title: "Star Area Formula", formula: "A = n \\cdot R \\cdot r \\cdot \\sin(\\pi / n)", substitution: `A = ${n} \\cdot ${fmt(R)} \\cdot ${fmt(r)} \\cdot \\sin(\\pi / ${n}) = ${fmt(area2)}` },
+                { title: "Edge Length", formula: "e = \\sqrt{R^2 + r^2 - 2Rr\\cos(\\pi / n)}", substitution: `e = \\sqrt{${fmt(R)}^2 + ${fmt(r)}^2 - 2(${fmt(R)})(${fmt(r)})\\cos(\\pi / ${n})} = ${fmt(edge)}` }
+              ],
+              svgData: { shape: "polygon", points }
+            };
+          }
+        }
+      ]
+    },
+    // 17. HEART SHAPE (CARDIOID)
+    {
+      id: "heart_cardioid",
+      name: "Heart Shape (Cardioid)",
+      category: "2d",
+      description: "Smooth mathematical heart curve / cardioid shape.",
+      icon: "heart",
+      methods: [
+        {
+          id: "scale_param",
+          name: "Scale Parameter (a)",
+          description: "Provide characteristic scale parameter a.",
+          inputs: [
+            { id: "a", label: "Scale Parameter (a)", symbol: "a", type: UNIT_TYPES.LENGTH, default: 4, min: 1e-4 }
+          ],
+          calculate: (vals) => {
+            const { a } = vals;
+            const area2 = 1.5 * Math.PI * a * a;
+            const perimeter = 8 * a;
+            const maxWidth = 4 * a;
+            const maxHeight = 3.5 * a;
+            const points = [];
+            const totalPts = 64;
+            for (let i = 0; i <= totalPts; i++) {
+              const t = 2 * Math.PI * i / totalPts;
+              const x = 16 * Math.pow(Math.sin(t), 3);
+              const y = -(13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t));
+              points.push({
+                x: x * a / 8 + maxWidth / 2,
+                y: y * a / 8 + maxHeight / 2
+              });
+            }
+            return {
+              outputs: [
+                { id: "area", label: "Heart Area (A)", symbol: "A", value: area2, type: UNIT_TYPES.AREA, isPrimary: true },
+                { id: "perimeter", label: "Perimeter (P)", symbol: "P", value: perimeter, type: UNIT_TYPES.LENGTH, isPrimary: true },
+                { id: "max_width", label: "Maximum Width", symbol: "W", value: maxWidth, type: UNIT_TYPES.LENGTH },
+                { id: "max_height", label: "Maximum Height", symbol: "H", value: maxHeight, type: UNIT_TYPES.LENGTH }
+              ],
+              steps: [
+                { title: "Cardioid Area Formula", formula: "A = \\frac{3}{2}\\pi a^2", substitution: `A = 1.5 \\cdot \\pi \\cdot ${fmt(a)}^2 = ${fmt(area2)}` },
+                { title: "Perimeter Formula", formula: "P = 8a", substitution: `P = 8 \\cdot ${fmt(a)} = ${fmt(perimeter)}` }
+              ],
+              svgData: { shape: "polygon", points }
             };
           }
         }
@@ -1579,6 +1885,304 @@
                 { title: "Surface Area", formula: "A = 2\\pi r L + 4\\pi r^2", substitution: `A = 2\\pi(${r})(${L}) + 4\\pi(${r}^2) = ${totalSurfaceArea}` }
               ],
               threeData: { type: "capsule", radius: r, length: L }
+            };
+          }
+        }
+      ]
+    },
+    // 13. SPHERICAL CAP (DOME)
+    {
+      id: "spherical_cap",
+      name: "Spherical Cap (Dome)",
+      category: "3d",
+      description: "Portion of a sphere cut off by a planar slice, forming a dome with a circular base.",
+      icon: "spherical_cap",
+      methods: [
+        {
+          id: "by_sphere_radius_and_height",
+          name: "By Sphere Radius & Cap Height (R, h)",
+          description: "Provide sphere radius R and cap height h.",
+          inputs: [
+            { id: "R", label: "Sphere Radius (R)", symbol: "R", type: UNIT_TYPES.LENGTH, default: 6, min: 1e-4 },
+            { id: "h", label: "Cap Height (h)", symbol: "h", type: UNIT_TYPES.LENGTH, default: 3, min: 1e-4 }
+          ],
+          calculate: (vals) => {
+            const { R, h } = vals;
+            if (h > 2 * R) {
+              throw new Error("Cap height h cannot exceed the sphere diameter (2R)");
+            }
+            const a = Math.sqrt(Math.max(0, h * (2 * R - h)));
+            const curvedArea = 2 * Math.PI * R * h;
+            const baseArea = Math.PI * a * a;
+            const totalArea = curvedArea + baseArea;
+            const volume = Math.PI * h * h * (3 * R - h) / 3;
+            return {
+              outputs: [
+                { id: "volume", label: "Volume (V)", symbol: "V", value: volume, type: UNIT_TYPES.VOLUME, isPrimary: true },
+                { id: "surface_area", label: "Total Surface Area (A)", symbol: "A", value: totalArea, type: UNIT_TYPES.AREA, isPrimary: true },
+                { id: "curved_area", label: "Curved Dome Surface Area", symbol: "A_c", value: curvedArea, type: UNIT_TYPES.AREA, isPrimary: true },
+                { id: "base_radius", label: "Base Circle Radius (a)", symbol: "a", value: a, type: UNIT_TYPES.LENGTH },
+                { id: "base_area", label: "Base Circle Area", symbol: "A_b", value: baseArea, type: UNIT_TYPES.AREA }
+              ],
+              steps: [
+                { title: "Base Circle Radius", formula: "a = \\sqrt{h(2R - h)}", substitution: `a = \\sqrt{${h}(2(${R}) - ${h})} = ${a}` },
+                { title: "Curved Dome Area", formula: "A_{curved} = 2\\pi R h", substitution: `A_{curved} = 2\\pi(${R})(${h}) = ${curvedArea}` },
+                { title: "Cap Volume", formula: "V = \\frac{\\pi h^2}{3}(3R - h)", substitution: `V = \\frac{\\pi(${h}^2)}{3}(3(${R}) - ${h}) = ${volume}` }
+              ],
+              threeData: { type: "spherical_cap", radius: R, height: h }
+            };
+          }
+        },
+        {
+          id: "by_base_radius_and_height",
+          name: "By Base Radius & Cap Height (a, h)",
+          description: "Provide base circle radius a and cap height h.",
+          inputs: [
+            { id: "a", label: "Base Radius (a)", symbol: "a", type: UNIT_TYPES.LENGTH, default: 4, min: 1e-4 },
+            { id: "h", label: "Cap Height (h)", symbol: "h", type: UNIT_TYPES.LENGTH, default: 3, min: 1e-4 }
+          ],
+          calculate: (vals) => {
+            const { a, h } = vals;
+            const R = (a * a + h * h) / (2 * h);
+            const curvedArea = Math.PI * (a * a + h * h);
+            const baseArea = Math.PI * a * a;
+            const totalArea = curvedArea + baseArea;
+            const volume = Math.PI * h * (3 * a * a + h * h) / 6;
+            return {
+              outputs: [
+                { id: "volume", label: "Volume (V)", symbol: "V", value: volume, type: UNIT_TYPES.VOLUME, isPrimary: true },
+                { id: "surface_area", label: "Total Surface Area (A)", symbol: "A", value: totalArea, type: UNIT_TYPES.AREA, isPrimary: true },
+                { id: "sphere_radius", label: "Parent Sphere Radius (R)", symbol: "R", value: R, type: UNIT_TYPES.LENGTH, isPrimary: true },
+                { id: "curved_area", label: "Curved Dome Surface Area", symbol: "A_c", value: curvedArea, type: UNIT_TYPES.AREA },
+                { id: "base_area", label: "Base Circle Area", symbol: "A_b", value: baseArea, type: UNIT_TYPES.AREA }
+              ],
+              steps: [
+                { title: "Sphere Radius", formula: "R = \\frac{a^2 + h^2}{2h}", substitution: `R = \\frac{${a}^2 + ${h}^2}{2(${h})} = ${R}` },
+                { title: "Cap Volume", formula: "V = \\frac{\\pi h}{6}(3a^2 + h^2)", substitution: `V = \\frac{\\pi(${h})}{6}(3(${a}^2) + ${h}^2) = ${volume}` },
+                { title: "Total Surface Area", formula: "A = \\pi(2a^2 + h^2)", substitution: `A = \\pi(2(${a}^2) + ${h}^2) = ${totalArea}` }
+              ],
+              threeData: { type: "spherical_cap", radius: R, height: h }
+            };
+          }
+        }
+      ]
+    },
+    // 14. HOLLOW CYLINDER (PIPE)
+    {
+      id: "hollow_cylinder",
+      name: "Hollow Cylinder (Pipe / Tube)",
+      category: "3d",
+      description: "Circular cylindrical tube or pipe with an outer wall and inner concentric cylindrical bore.",
+      icon: "hollow_cylinder",
+      methods: [
+        {
+          id: "by_radii_and_height",
+          name: "By Outer & Inner Radii, Height (R, r, h)",
+          description: "Provide outer radius R, inner radius r, and height h.",
+          inputs: [
+            { id: "R", label: "Outer Radius (R)", symbol: "R", type: UNIT_TYPES.LENGTH, default: 5, min: 1e-4 },
+            { id: "r", label: "Inner Radius (r)", symbol: "r", type: UNIT_TYPES.LENGTH, default: 3, min: 1e-4 },
+            { id: "h", label: "Height / Length (h)", symbol: "h", type: UNIT_TYPES.LENGTH, default: 10, min: 1e-4 }
+          ],
+          calculate: (vals) => {
+            const { R, r, h } = vals;
+            if (r >= R) {
+              throw new Error("Inner radius (r) must be strictly less than outer radius (R)");
+            }
+            const thickness = R - r;
+            const outerLateral = 2 * Math.PI * R * h;
+            const innerLateral = 2 * Math.PI * r * h;
+            const ringAreaEach = Math.PI * (R * R - r * r);
+            const totalArea = outerLateral + innerLateral + 2 * ringAreaEach;
+            const volume = Math.PI * h * (R * R - r * r);
+            return {
+              outputs: [
+                { id: "volume", label: "Material Volume (V)", symbol: "V", value: volume, type: UNIT_TYPES.VOLUME, isPrimary: true },
+                { id: "surface_area", label: "Total Surface Area (A)", symbol: "A", value: totalArea, type: UNIT_TYPES.AREA, isPrimary: true },
+                { id: "wall_thickness", label: "Wall Thickness (t)", symbol: "t", value: thickness, type: UNIT_TYPES.LENGTH, isPrimary: true },
+                { id: "outer_lateral", label: "Outer Lateral Surface Area", symbol: "A_{out}", value: outerLateral, type: UNIT_TYPES.AREA },
+                { id: "inner_lateral", label: "Inner Lateral Surface Area", symbol: "A_{in}", value: innerLateral, type: UNIT_TYPES.AREA },
+                { id: "bore_capacity", label: "Inner Bore Capacity", symbol: "V_{bore}", value: Math.PI * r * r * h, type: UNIT_TYPES.VOLUME }
+              ],
+              steps: [
+                { title: "Wall Thickness", formula: "t = R - r", substitution: `t = ${R} - ${r} = ${thickness}` },
+                { title: "Material Volume", formula: "V = \\pi h(R^2 - r^2)", substitution: `V = \\pi(${h})(${R}^2 - ${r}^2) = ${volume}` },
+                { title: "Total Surface Area", formula: "A = 2\\pi(R + r)h + 2\\pi(R^2 - r^2)", substitution: `A = 2\\pi(${R} + ${r})(${h}) + 2\\pi(${R}^2 - ${r}^2) = ${totalArea}` }
+              ],
+              threeData: { type: "hollow_cylinder", outerRadius: R, innerRadius: r, height: h }
+            };
+          }
+        }
+      ]
+    },
+    // 15. REGULAR TETRAHEDRON
+    {
+      id: "tetrahedron",
+      name: "Regular Tetrahedron",
+      category: "3d",
+      description: "Platonic solid with four congruent equilateral triangular faces, four vertices, and six edges.",
+      icon: "tetrahedron",
+      methods: [
+        {
+          id: "by_edge",
+          name: "By Edge Length (a)",
+          description: "Provide edge length a.",
+          inputs: [
+            { id: "a", label: "Edge Length (a)", symbol: "a", type: UNIT_TYPES.LENGTH, default: 6, min: 1e-4 }
+          ],
+          calculate: (vals) => {
+            const { a } = vals;
+            const faceArea = Math.sqrt(3) / 4 * a * a;
+            const totalArea = Math.sqrt(3) * a * a;
+            const volume = Math.pow(a, 3) / (6 * Math.SQRT2);
+            const height = Math.sqrt(2 / 3) * a;
+            const circumradius = Math.sqrt(6) / 4 * a;
+            const inradius = a / Math.sqrt(24);
+            return {
+              outputs: [
+                { id: "volume", label: "Volume (V)", symbol: "V", value: volume, type: UNIT_TYPES.VOLUME, isPrimary: true },
+                { id: "surface_area", label: "Total Surface Area (A)", symbol: "A", value: totalArea, type: UNIT_TYPES.AREA, isPrimary: true },
+                { id: "height", label: "Vertical Height (H)", symbol: "H", value: height, type: UNIT_TYPES.LENGTH, isPrimary: true },
+                { id: "face_area", label: "Single Face Area", symbol: "A_f", value: faceArea, type: UNIT_TYPES.AREA },
+                { id: "circumradius", label: "Circumradius (R)", symbol: "R", value: circumradius, type: UNIT_TYPES.LENGTH },
+                { id: "inradius", label: "Inradius (r)", symbol: "r", value: inradius, type: UNIT_TYPES.LENGTH }
+              ],
+              steps: [
+                { title: "Volume", formula: "V = \\frac{a^3}{6\\sqrt{2}}", substitution: `V = \\frac{${a}^3}{6\\sqrt{2}} = ${volume}` },
+                { title: "Total Surface Area", formula: "A = \\sqrt{3} a^2", substitution: `A = \\sqrt{3}(${a}^2) = ${totalArea}` },
+                { title: "Vertical Height", formula: "H = \\sqrt{2/3} a", substitution: `H = \\sqrt{2/3}(${a}) = ${height}` }
+              ],
+              threeData: { type: "tetrahedron", edge: a }
+            };
+          }
+        }
+      ]
+    },
+    // 16. REGULAR OCTAHEDRON
+    {
+      id: "octahedron",
+      name: "Regular Octahedron",
+      category: "3d",
+      description: "Platonic solid with eight congruent equilateral triangular faces, six vertices, and twelve edges.",
+      icon: "octahedron",
+      methods: [
+        {
+          id: "by_edge",
+          name: "By Edge Length (a)",
+          description: "Provide edge length a.",
+          inputs: [
+            { id: "a", label: "Edge Length (a)", symbol: "a", type: UNIT_TYPES.LENGTH, default: 5, min: 1e-4 }
+          ],
+          calculate: (vals) => {
+            const { a } = vals;
+            const faceArea = Math.sqrt(3) / 4 * a * a;
+            const totalArea = 2 * Math.sqrt(3) * a * a;
+            const volume = Math.SQRT2 / 3 * Math.pow(a, 3);
+            const circumradius = a / Math.SQRT2;
+            const inradius = a / Math.sqrt(6);
+            const midradius = a / 2;
+            return {
+              outputs: [
+                { id: "volume", label: "Volume (V)", symbol: "V", value: volume, type: UNIT_TYPES.VOLUME, isPrimary: true },
+                { id: "surface_area", label: "Total Surface Area (A)", symbol: "A", value: totalArea, type: UNIT_TYPES.AREA, isPrimary: true },
+                { id: "circumradius", label: "Circumradius (R)", symbol: "R", value: circumradius, type: UNIT_TYPES.LENGTH, isPrimary: true },
+                { id: "inradius", label: "Inradius (r)", symbol: "r", value: inradius, type: UNIT_TYPES.LENGTH },
+                { id: "midradius", label: "Midradius (\u03C1)", symbol: "\u03C1", value: midradius, type: UNIT_TYPES.LENGTH },
+                { id: "face_area", label: "Single Face Area", symbol: "A_f", value: faceArea, type: UNIT_TYPES.AREA }
+              ],
+              steps: [
+                { title: "Volume", formula: "V = \\frac{\\sqrt{2}}{3} a^3", substitution: `V = \\frac{\\sqrt{2}}{3}(${a}^3) = ${volume}` },
+                { title: "Total Surface Area", formula: "A = 2\\sqrt{3} a^2", substitution: `A = 2\\sqrt{3}(${a}^2) = ${totalArea}` },
+                { title: "Circumradius", formula: "R = \\frac{a}{\\sqrt{2}}", substitution: `R = \\frac{${a}}{\\sqrt{2}} = ${circumradius}` }
+              ],
+              threeData: { type: "octahedron", edge: a }
+            };
+          }
+        }
+      ]
+    },
+    // 17. REGULAR ICOSAHEDRON
+    {
+      id: "icosahedron",
+      name: "Regular Icosahedron",
+      category: "3d",
+      description: "Platonic solid with twenty equilateral triangular faces, twelve vertices, and thirty edges.",
+      icon: "icosahedron",
+      methods: [
+        {
+          id: "by_edge",
+          name: "By Edge Length (a)",
+          description: "Provide edge length a.",
+          inputs: [
+            { id: "a", label: "Edge Length (a)", symbol: "a", type: UNIT_TYPES.LENGTH, default: 4, min: 1e-4 }
+          ],
+          calculate: (vals) => {
+            const { a } = vals;
+            const faceArea = Math.sqrt(3) / 4 * a * a;
+            const totalArea = 5 * Math.sqrt(3) * a * a;
+            const volume = 5 * (3 + Math.sqrt(5)) / 12 * Math.pow(a, 3);
+            const circumradius = a / 4 * Math.sqrt(10 + 2 * Math.sqrt(5));
+            const inradius = a / 12 * Math.sqrt(3) * (3 + Math.sqrt(5));
+            const midradius = a / 4 * (1 + Math.sqrt(5));
+            return {
+              outputs: [
+                { id: "volume", label: "Volume (V)", symbol: "V", value: volume, type: UNIT_TYPES.VOLUME, isPrimary: true },
+                { id: "surface_area", label: "Total Surface Area (A)", symbol: "A", value: totalArea, type: UNIT_TYPES.AREA, isPrimary: true },
+                { id: "circumradius", label: "Circumradius (R)", symbol: "R", value: circumradius, type: UNIT_TYPES.LENGTH, isPrimary: true },
+                { id: "inradius", label: "Inradius (r)", symbol: "r", value: inradius, type: UNIT_TYPES.LENGTH },
+                { id: "midradius", label: "Midradius (\u03C1)", symbol: "\u03C1", value: midradius, type: UNIT_TYPES.LENGTH },
+                { id: "face_area", label: "Single Face Area", symbol: "A_f", value: faceArea, type: UNIT_TYPES.AREA }
+              ],
+              steps: [
+                { title: "Volume", formula: "V = \\frac{5(3 + \\sqrt{5})}{12} a^3", substitution: `V = \\frac{5(3 + \\sqrt{5})}{12}(${a}^3) = ${volume}` },
+                { title: "Total Surface Area", formula: "A = 5\\sqrt{3} a^2", substitution: `A = 5\\sqrt{3}(${a}^2) = ${totalArea}` },
+                { title: "Circumradius", formula: "R = \\frac{a}{4}\\sqrt{10 + 2\\sqrt{5}}", substitution: `R = \\frac{${a}}{4}\\sqrt{10 + 2\\sqrt{5}} = ${circumradius}` }
+              ],
+              threeData: { type: "icosahedron", edge: a }
+            };
+          }
+        }
+      ]
+    },
+    // 18. REGULAR DODECAHEDRON
+    {
+      id: "dodecahedron",
+      name: "Regular Dodecahedron",
+      category: "3d",
+      description: "Platonic solid with twelve congruent regular pentagonal faces, twenty vertices, and thirty edges.",
+      icon: "dodecahedron",
+      methods: [
+        {
+          id: "by_edge",
+          name: "By Edge Length (a)",
+          description: "Provide edge length a.",
+          inputs: [
+            { id: "a", label: "Edge Length (a)", symbol: "a", type: UNIT_TYPES.LENGTH, default: 4, min: 1e-4 }
+          ],
+          calculate: (vals) => {
+            const { a } = vals;
+            const pentagonConst = Math.sqrt(25 + 10 * Math.sqrt(5));
+            const faceArea = 1 / 4 * pentagonConst * a * a;
+            const totalArea = 3 * pentagonConst * a * a;
+            const volume = (15 + 7 * Math.sqrt(5)) / 4 * Math.pow(a, 3);
+            const circumradius = a / 4 * (Math.sqrt(3) + Math.sqrt(15));
+            const inradius = a / 20 * Math.sqrt(250 + 110 * Math.sqrt(5));
+            const midradius = a / 4 * (3 + Math.sqrt(5));
+            return {
+              outputs: [
+                { id: "volume", label: "Volume (V)", symbol: "V", value: volume, type: UNIT_TYPES.VOLUME, isPrimary: true },
+                { id: "surface_area", label: "Total Surface Area (A)", symbol: "A", value: totalArea, type: UNIT_TYPES.AREA, isPrimary: true },
+                { id: "circumradius", label: "Circumradius (R)", symbol: "R", value: circumradius, type: UNIT_TYPES.LENGTH, isPrimary: true },
+                { id: "inradius", label: "Inradius (r)", symbol: "r", value: inradius, type: UNIT_TYPES.LENGTH },
+                { id: "midradius", label: "Midradius (\u03C1)", symbol: "\u03C1", value: midradius, type: UNIT_TYPES.LENGTH },
+                { id: "face_area", label: "Single Pentagonal Face Area", symbol: "A_f", value: faceArea, type: UNIT_TYPES.AREA }
+              ],
+              steps: [
+                { title: "Volume", formula: "V = \\frac{15 + 7\\sqrt{5}}{4} a^3", substitution: `V = \\frac{15 + 7\\sqrt{5}}{4}(${a}^3) = ${volume}` },
+                { title: "Total Surface Area", formula: "A = 3\\sqrt{25 + 10\\sqrt{5}} a^2", substitution: `A = 3\\sqrt{25 + 10\\sqrt{5}}(${a}^2) = ${totalArea}` },
+                { title: "Circumradius", formula: "R = \\frac{a}{4}(\\sqrt{3} + \\sqrt{15})", substitution: `R = \\frac{${a}}{4}(\\sqrt{3} + \\sqrt{15}) = ${circumradius}` }
+              ],
+              threeData: { type: "dodecahedron", edge: a }
             };
           }
         }
@@ -4621,17 +5225,17 @@
      * @return {Matrix3} A reference to this matrix.
      */
     transpose() {
-      let tmp;
+      let tmp3;
       const m = this.elements;
-      tmp = m[1];
+      tmp3 = m[1];
       m[1] = m[3];
-      m[3] = tmp;
-      tmp = m[2];
+      m[3] = tmp3;
+      tmp3 = m[2];
       m[2] = m[6];
-      m[6] = tmp;
-      tmp = m[5];
+      m[6] = tmp3;
+      tmp3 = m[5];
       m[5] = m[7];
-      m[7] = tmp;
+      m[7] = tmp3;
       return this;
     }
     /**
@@ -7102,25 +7706,25 @@
      */
     transpose() {
       const te = this.elements;
-      let tmp;
-      tmp = te[1];
+      let tmp3;
+      tmp3 = te[1];
       te[1] = te[4];
-      te[4] = tmp;
-      tmp = te[2];
+      te[4] = tmp3;
+      tmp3 = te[2];
       te[2] = te[8];
-      te[8] = tmp;
-      tmp = te[6];
+      te[8] = tmp3;
+      tmp3 = te[6];
       te[6] = te[9];
-      te[9] = tmp;
-      tmp = te[3];
+      te[9] = tmp3;
+      tmp3 = te[3];
       te[3] = te[12];
-      te[12] = tmp;
-      tmp = te[7];
+      te[12] = tmp3;
+      tmp3 = te[7];
       te[7] = te[13];
-      te[13] = tmp;
-      tmp = te[11];
+      te[13] = tmp3;
+      tmp3 = te[11];
       te[11] = te[14];
-      te[14] = tmp;
+      te[14] = tmp3;
       return this;
     }
     /**
@@ -8701,11 +9305,11 @@
       this.matrix.compose(this.position, this.quaternion, this.scale);
       const pivot = this.pivot;
       if (pivot !== null) {
-        const px = pivot.x, py = pivot.y, pz = pivot.z;
+        const px2 = pivot.x, py2 = pivot.y, pz2 = pivot.z;
         const te = this.matrix.elements;
-        te[12] += px - te[0] * px - te[4] * py - te[8] * pz;
-        te[13] += py - te[1] * px - te[5] * py - te[9] * pz;
-        te[14] += pz - te[2] * px - te[6] * py - te[10] * pz;
+        te[12] += px2 - te[0] * px2 - te[4] * py2 - te[8] * pz2;
+        te[13] += py2 - te[1] * px2 - te[5] * py2 - te[9] * pz2;
+        te[14] += pz2 - te[2] * px2 - te[6] * py2 - te[10] * pz2;
       }
       this.matrixWorldNeedsUpdate = true;
     }
@@ -12199,18 +12803,18 @@
           );
         }
       }
-      const tmp = new Vector3(), tmp2 = new Vector3();
+      const tmp3 = new Vector3(), tmp22 = new Vector3();
       const n = new Vector3(), n2 = new Vector3();
       function handleVertex(v) {
         n.fromBufferAttribute(normalAttribute, v);
         n2.copy(n);
         const t = tan1[v];
-        tmp.copy(t);
-        tmp.sub(n.multiplyScalar(n.dot(t))).normalize();
-        tmp2.crossVectors(n2, t);
-        const test = tmp2.dot(tan2[v]);
+        tmp3.copy(t);
+        tmp3.sub(n.multiplyScalar(n.dot(t))).normalize();
+        tmp22.crossVectors(n2, t);
+        const test = tmp22.dot(tan2[v]);
         const w = test < 0 ? -1 : 1;
-        tangentAttribute.setXYZW(v, tmp.x, tmp.y, tmp.z, w);
+        tangentAttribute.setXYZW(v, tmp3.x, tmp3.y, tmp3.z, w);
       }
       for (let i = 0, il = groups.length; i < il; ++i) {
         const group = groups[i];
@@ -13946,7 +14550,7 @@
      * @param {Raycaster} raycaster - The raycaster.
      * @param {Array<Object>} intersects - The target array that holds the intersection points.
      */
-    raycast(raycaster, intersects) {
+    raycast(raycaster, intersects2) {
       const geometry = this.geometry;
       const material = this.material;
       const matrixWorld = this.matrixWorld;
@@ -13964,9 +14568,9 @@
       if (geometry.boundingBox !== null) {
         if (_ray$3.intersectsBox(geometry.boundingBox) === false) return;
       }
-      this._computeIntersections(raycaster, intersects, _ray$3);
+      this._computeIntersections(raycaster, intersects2, _ray$3);
     }
-    _computeIntersections(raycaster, intersects, rayLocalSpace) {
+    _computeIntersections(raycaster, intersects2, rayLocalSpace) {
       let intersection;
       const geometry = this.geometry;
       const material = this.material;
@@ -13992,7 +14596,7 @@
               if (intersection) {
                 intersection.faceIndex = Math.floor(j / 3);
                 intersection.face.materialIndex = group.materialIndex;
-                intersects.push(intersection);
+                intersects2.push(intersection);
               }
             }
           }
@@ -14006,7 +14610,7 @@
             intersection = checkGeometryIntersection(this, material, raycaster, rayLocalSpace, uv, uv1, normal, a, b, c);
             if (intersection) {
               intersection.faceIndex = Math.floor(i / 3);
-              intersects.push(intersection);
+              intersects2.push(intersection);
             }
           }
         }
@@ -14025,7 +14629,7 @@
               if (intersection) {
                 intersection.faceIndex = Math.floor(j / 3);
                 intersection.face.materialIndex = group.materialIndex;
-                intersects.push(intersection);
+                intersects2.push(intersection);
               }
             }
           }
@@ -14039,7 +14643,7 @@
             intersection = checkGeometryIntersection(this, material, raycaster, rayLocalSpace, uv, uv1, normal, a, b, c);
             if (intersection) {
               intersection.faceIndex = Math.floor(i / 3);
-              intersects.push(intersection);
+              intersects2.push(intersection);
             }
           }
         }
@@ -14412,7 +15016,7 @@
      * @param {Raycaster} raycaster - The raycaster.
      * @param {Array<Object>} intersects - The target array that holds the intersection points.
      */
-    raycast(raycaster, intersects) {
+    raycast(raycaster, intersects2) {
       const geometry = this.geometry;
       const matrixWorld = this.matrixWorld;
       const threshold = raycaster.params.Line.threshold;
@@ -14438,7 +15042,7 @@
           const b = index.getX(i + 1);
           const intersect = checkIntersection(this, raycaster, _ray$1, localThresholdSq, a, b, i);
           if (intersect) {
-            intersects.push(intersect);
+            intersects2.push(intersect);
           }
         }
         if (this.isLineLoop) {
@@ -14446,7 +15050,7 @@
           const b = index.getX(start);
           const intersect = checkIntersection(this, raycaster, _ray$1, localThresholdSq, a, b, end - 1);
           if (intersect) {
-            intersects.push(intersect);
+            intersects2.push(intersect);
           }
         }
       } else {
@@ -14455,13 +15059,13 @@
         for (let i = start, l = end - 1; i < l; i += step) {
           const intersect = checkIntersection(this, raycaster, _ray$1, localThresholdSq, i, i + 1, i);
           if (intersect) {
-            intersects.push(intersect);
+            intersects2.push(intersect);
           }
         }
         if (this.isLineLoop) {
           const intersect = checkIntersection(this, raycaster, _ray$1, localThresholdSq, end - 1, start, end - 1);
           if (intersect) {
-            intersects.push(intersect);
+            intersects2.push(intersect);
           }
         }
       }
@@ -15045,10 +15649,10 @@
         const vertex2 = new Vector3();
         let groupCount = 0;
         const radius = top === true ? radiusTop : radiusBottom;
-        const sign = top === true ? 1 : -1;
+        const sign2 = top === true ? 1 : -1;
         for (let x = 1; x <= radialSegments; x++) {
-          vertices.push(0, halfHeight * sign, 0);
-          normals.push(0, sign, 0);
+          vertices.push(0, halfHeight * sign2, 0);
+          normals.push(0, sign2, 0);
           uvs.push(0.5, 0.5);
           index++;
         }
@@ -15059,12 +15663,12 @@
           const cosTheta = Math.cos(theta);
           const sinTheta = Math.sin(theta);
           vertex2.x = radius * sinTheta;
-          vertex2.y = halfHeight * sign;
+          vertex2.y = halfHeight * sign2;
           vertex2.z = radius * cosTheta;
           vertices.push(vertex2.x, vertex2.y, vertex2.z);
-          normals.push(0, sign, 0);
+          normals.push(0, sign2, 0);
           uv.x = cosTheta * 0.5 + 0.5;
-          uv.y = sinTheta * 0.5 * sign + 0.5;
+          uv.y = sinTheta * 0.5 * sign2 + 0.5;
           uvs.push(uv.x, uv.y);
           index++;
         }
@@ -15133,6 +15737,384 @@
      */
     static fromJSON(data) {
       return new _ConeGeometry(data.radius, data.height, data.radialSegments, data.heightSegments, data.openEnded, data.thetaStart, data.thetaLength);
+    }
+  };
+  var PolyhedronGeometry = class _PolyhedronGeometry extends BufferGeometry {
+    /**
+     * Constructs a new polyhedron geometry.
+     *
+     * @param {Array<number>} [vertices] - A flat array of vertices describing the base shape.
+     * @param {Array<number>} [indices] - A flat array of indices describing the base shape.
+     * @param {number} [radius=1] - The radius of the shape.
+     * @param {number} [detail=0] - How many levels to subdivide the geometry. The more detail, the smoother the shape.
+     */
+    constructor(vertices = [], indices = [], radius = 1, detail = 0) {
+      super();
+      this.type = "PolyhedronGeometry";
+      this.parameters = {
+        vertices,
+        indices,
+        radius,
+        detail
+      };
+      const vertexBuffer = [];
+      const uvBuffer = [];
+      subdivide(detail);
+      applyRadius(radius);
+      generateUVs();
+      this.setAttribute("position", new Float32BufferAttribute(vertexBuffer, 3));
+      this.setAttribute("normal", new Float32BufferAttribute(vertexBuffer.slice(), 3));
+      this.setAttribute("uv", new Float32BufferAttribute(uvBuffer, 2));
+      if (detail === 0) {
+        this.computeVertexNormals();
+      } else {
+        this.normalizeNormals();
+      }
+      function subdivide(detail2) {
+        const a = new Vector3();
+        const b = new Vector3();
+        const c = new Vector3();
+        for (let i = 0; i < indices.length; i += 3) {
+          getVertexByIndex(indices[i + 0], a);
+          getVertexByIndex(indices[i + 1], b);
+          getVertexByIndex(indices[i + 2], c);
+          subdivideFace(a, b, c, detail2);
+        }
+      }
+      function subdivideFace(a, b, c, detail2) {
+        const cols = detail2 + 1;
+        const v = [];
+        for (let i = 0; i <= cols; i++) {
+          v[i] = [];
+          const aj = a.clone().lerp(c, i / cols);
+          const bj = b.clone().lerp(c, i / cols);
+          const rows = cols - i;
+          for (let j = 0; j <= rows; j++) {
+            if (j === 0 && i === cols) {
+              v[i][j] = aj;
+            } else {
+              v[i][j] = aj.clone().lerp(bj, j / rows);
+            }
+          }
+        }
+        for (let i = 0; i < cols; i++) {
+          for (let j = 0; j < 2 * (cols - i) - 1; j++) {
+            const k = Math.floor(j / 2);
+            if (j % 2 === 0) {
+              pushVertex(v[i][k + 1]);
+              pushVertex(v[i + 1][k]);
+              pushVertex(v[i][k]);
+            } else {
+              pushVertex(v[i][k + 1]);
+              pushVertex(v[i + 1][k + 1]);
+              pushVertex(v[i + 1][k]);
+            }
+          }
+        }
+      }
+      function applyRadius(radius2) {
+        const vertex2 = new Vector3();
+        for (let i = 0; i < vertexBuffer.length; i += 3) {
+          vertex2.x = vertexBuffer[i + 0];
+          vertex2.y = vertexBuffer[i + 1];
+          vertex2.z = vertexBuffer[i + 2];
+          vertex2.normalize().multiplyScalar(radius2);
+          vertexBuffer[i + 0] = vertex2.x;
+          vertexBuffer[i + 1] = vertex2.y;
+          vertexBuffer[i + 2] = vertex2.z;
+        }
+      }
+      function generateUVs() {
+        const vertex2 = new Vector3();
+        for (let i = 0; i < vertexBuffer.length; i += 3) {
+          vertex2.x = vertexBuffer[i + 0];
+          vertex2.y = vertexBuffer[i + 1];
+          vertex2.z = vertexBuffer[i + 2];
+          const u = azimuth(vertex2) / 2 / Math.PI + 0.5;
+          const v = inclination(vertex2) / Math.PI + 0.5;
+          uvBuffer.push(u, 1 - v);
+        }
+        correctUVs();
+        correctSeam();
+      }
+      function correctSeam() {
+        for (let i = 0; i < uvBuffer.length; i += 6) {
+          const x0 = uvBuffer[i + 0];
+          const x1 = uvBuffer[i + 2];
+          const x2 = uvBuffer[i + 4];
+          const max = Math.max(x0, x1, x2);
+          const min = Math.min(x0, x1, x2);
+          if (max > 0.9 && min < 0.1) {
+            if (x0 < 0.2) uvBuffer[i + 0] += 1;
+            if (x1 < 0.2) uvBuffer[i + 2] += 1;
+            if (x2 < 0.2) uvBuffer[i + 4] += 1;
+          }
+        }
+      }
+      function pushVertex(vertex2) {
+        vertexBuffer.push(vertex2.x, vertex2.y, vertex2.z);
+      }
+      function getVertexByIndex(index, vertex2) {
+        const stride = index * 3;
+        vertex2.x = vertices[stride + 0];
+        vertex2.y = vertices[stride + 1];
+        vertex2.z = vertices[stride + 2];
+      }
+      function correctUVs() {
+        const a = new Vector3();
+        const b = new Vector3();
+        const c = new Vector3();
+        const centroid = new Vector3();
+        const uvA = new Vector2();
+        const uvB = new Vector2();
+        const uvC = new Vector2();
+        for (let i = 0, j = 0; i < vertexBuffer.length; i += 9, j += 6) {
+          a.set(vertexBuffer[i + 0], vertexBuffer[i + 1], vertexBuffer[i + 2]);
+          b.set(vertexBuffer[i + 3], vertexBuffer[i + 4], vertexBuffer[i + 5]);
+          c.set(vertexBuffer[i + 6], vertexBuffer[i + 7], vertexBuffer[i + 8]);
+          uvA.set(uvBuffer[j + 0], uvBuffer[j + 1]);
+          uvB.set(uvBuffer[j + 2], uvBuffer[j + 3]);
+          uvC.set(uvBuffer[j + 4], uvBuffer[j + 5]);
+          centroid.copy(a).add(b).add(c).divideScalar(3);
+          const azi = azimuth(centroid);
+          correctUV(uvA, j + 0, a, azi);
+          correctUV(uvB, j + 2, b, azi);
+          correctUV(uvC, j + 4, c, azi);
+        }
+      }
+      function correctUV(uv, stride, vector, azimuth2) {
+        if (azimuth2 < 0 && uv.x === 1) {
+          uvBuffer[stride] = uv.x - 1;
+        }
+        if (vector.x === 0 && vector.z === 0) {
+          uvBuffer[stride] = azimuth2 / 2 / Math.PI + 0.5;
+        }
+      }
+      function azimuth(vector) {
+        return Math.atan2(vector.z, -vector.x);
+      }
+      function inclination(vector) {
+        return Math.atan2(-vector.y, Math.sqrt(vector.x * vector.x + vector.z * vector.z));
+      }
+    }
+    copy(source) {
+      super.copy(source);
+      this.parameters = Object.assign({}, source.parameters);
+      return this;
+    }
+    /**
+     * Factory method for creating an instance of this class from the given
+     * JSON object.
+     *
+     * @param {Object} data - A JSON object representing the serialized geometry.
+     * @return {PolyhedronGeometry} A new instance.
+     */
+    static fromJSON(data) {
+      return new _PolyhedronGeometry(data.vertices, data.indices, data.radius, data.detail);
+    }
+  };
+  var DodecahedronGeometry = class _DodecahedronGeometry extends PolyhedronGeometry {
+    /**
+     * Constructs a new dodecahedron geometry.
+     *
+     * @param {number} [radius=1] - Radius of the dodecahedron.
+     * @param {number} [detail=0] - Setting this to a value greater than `0` adds vertices making it no longer a dodecahedron.
+     */
+    constructor(radius = 1, detail = 0) {
+      const t = (1 + Math.sqrt(5)) / 2;
+      const r = 1 / t;
+      const vertices = [
+        // (±1, ±1, ±1)
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        1,
+        -1,
+        1,
+        -1,
+        -1,
+        1,
+        1,
+        1,
+        -1,
+        -1,
+        1,
+        -1,
+        1,
+        1,
+        1,
+        -1,
+        1,
+        1,
+        1,
+        // (0, ±1/φ, ±φ)
+        0,
+        -r,
+        -t,
+        0,
+        -r,
+        t,
+        0,
+        r,
+        -t,
+        0,
+        r,
+        t,
+        // (±1/φ, ±φ, 0)
+        -r,
+        -t,
+        0,
+        -r,
+        t,
+        0,
+        r,
+        -t,
+        0,
+        r,
+        t,
+        0,
+        // (±φ, 0, ±1/φ)
+        -t,
+        0,
+        -r,
+        t,
+        0,
+        -r,
+        -t,
+        0,
+        r,
+        t,
+        0,
+        r
+      ];
+      const indices = [
+        3,
+        11,
+        7,
+        3,
+        7,
+        15,
+        3,
+        15,
+        13,
+        7,
+        19,
+        17,
+        7,
+        17,
+        6,
+        7,
+        6,
+        15,
+        17,
+        4,
+        8,
+        17,
+        8,
+        10,
+        17,
+        10,
+        6,
+        8,
+        0,
+        16,
+        8,
+        16,
+        2,
+        8,
+        2,
+        10,
+        0,
+        12,
+        1,
+        0,
+        1,
+        18,
+        0,
+        18,
+        16,
+        6,
+        10,
+        2,
+        6,
+        2,
+        13,
+        6,
+        13,
+        15,
+        2,
+        16,
+        18,
+        2,
+        18,
+        3,
+        2,
+        3,
+        13,
+        18,
+        1,
+        9,
+        18,
+        9,
+        11,
+        18,
+        11,
+        3,
+        4,
+        14,
+        12,
+        4,
+        12,
+        0,
+        4,
+        0,
+        8,
+        11,
+        9,
+        5,
+        11,
+        5,
+        19,
+        11,
+        19,
+        7,
+        19,
+        5,
+        14,
+        19,
+        14,
+        4,
+        19,
+        4,
+        17,
+        1,
+        12,
+        14,
+        1,
+        14,
+        5,
+        1,
+        5,
+        9
+      ];
+      super(vertices, indices, radius, detail);
+      this.type = "DodecahedronGeometry";
+      this.parameters = {
+        radius,
+        detail
+      };
+    }
+    /**
+     * Factory method for creating an instance of this class from the given
+     * JSON object.
+     *
+     * @param {Object} data - A JSON object representing the serialized geometry.
+     * @return {DodecahedronGeometry} A new instance.
+     */
+    static fromJSON(data) {
+      return new _DodecahedronGeometry(data.radius, data.detail);
     }
   };
   var _v0 = /* @__PURE__ */ new Vector3();
@@ -15226,6 +16208,2590 @@
       super.copy(source);
       this.parameters = Object.assign({}, source.parameters);
       return this;
+    }
+  };
+  var Curve = class {
+    /**
+     * Constructs a new curve.
+     */
+    constructor() {
+      this.type = "Curve";
+      this.arcLengthDivisions = 200;
+      this.needsUpdate = false;
+      this.cacheArcLengths = null;
+    }
+    /**
+     * This method returns a vector in 2D or 3D space (depending on the curve definition)
+     * for the given interpolation factor.
+     *
+     * @abstract
+     * @param {number} t - A interpolation factor representing a position on the curve. Must be in the range `[0,1]`.
+     * @param {(Vector2|Vector3)} [optionalTarget] - The optional target vector the result is written to.
+     * @return {(Vector2|Vector3)} The position on the curve. It can be a 2D or 3D vector depending on the curve definition.
+     */
+    getPoint() {
+      warn("Curve: .getPoint() not implemented.");
+    }
+    /**
+     * This method returns a vector in 2D or 3D space (depending on the curve definition)
+     * for the given interpolation factor. Unlike {@link Curve#getPoint}, this method honors the length
+     * of the curve which equidistant samples.
+     *
+     * @param {number} u - A interpolation factor representing a position on the curve. Must be in the range `[0,1]`.
+     * @param {(Vector2|Vector3)} [optionalTarget] - The optional target vector the result is written to.
+     * @return {(Vector2|Vector3)} The position on the curve. It can be a 2D or 3D vector depending on the curve definition.
+     */
+    getPointAt(u, optionalTarget) {
+      const t = this.getUtoTmapping(u);
+      return this.getPoint(t, optionalTarget);
+    }
+    /**
+     * This method samples the curve via {@link Curve#getPoint} and returns an array of points representing
+     * the curve shape.
+     *
+     * @param {number} [divisions=5] - The number of divisions.
+     * @return {Array<(Vector2|Vector3)>} An array holding the sampled curve values. The number of points is `divisions + 1`.
+     */
+    getPoints(divisions = 5) {
+      const points = [];
+      for (let d = 0; d <= divisions; d++) {
+        points.push(this.getPoint(d / divisions));
+      }
+      return points;
+    }
+    // Get sequence of points using getPointAt( u )
+    /**
+     * This method samples the curve via {@link Curve#getPointAt} and returns an array of points representing
+     * the curve shape. Unlike {@link Curve#getPoints}, this method returns equi-spaced points across the entire
+     * curve.
+     *
+     * @param {number} [divisions=5] - The number of divisions.
+     * @return {Array<(Vector2|Vector3)>} An array holding the sampled curve values. The number of points is `divisions + 1`.
+     */
+    getSpacedPoints(divisions = 5) {
+      const points = [];
+      for (let d = 0; d <= divisions; d++) {
+        points.push(this.getPointAt(d / divisions));
+      }
+      return points;
+    }
+    /**
+     * Returns the total arc length of the curve.
+     *
+     * @return {number} The length of the curve.
+     */
+    getLength() {
+      const lengths = this.getLengths();
+      return lengths[lengths.length - 1];
+    }
+    /**
+     * Returns an array of cumulative segment lengths of the curve.
+     *
+     * @param {number} [divisions=this.arcLengthDivisions] - The number of divisions.
+     * @return {Array<number>} An array holding the cumulative segment lengths.
+     */
+    getLengths(divisions = this.arcLengthDivisions) {
+      if (this.cacheArcLengths && this.cacheArcLengths.length === divisions + 1 && !this.needsUpdate) {
+        return this.cacheArcLengths;
+      }
+      this.needsUpdate = false;
+      const cache = [];
+      let current, last = this.getPoint(0);
+      let sum = 0;
+      cache.push(0);
+      for (let p = 1; p <= divisions; p++) {
+        current = this.getPoint(p / divisions);
+        sum += current.distanceTo(last);
+        cache.push(sum);
+        last = current;
+      }
+      this.cacheArcLengths = cache;
+      return cache;
+    }
+    /**
+     * Update the cumulative segment distance cache. The method must be called
+     * every time curve parameters are changed. If an updated curve is part of a
+     * composed curve like {@link CurvePath}, this method must be called on the
+     * composed curve, too.
+     */
+    updateArcLengths() {
+      this.needsUpdate = true;
+      this.getLengths();
+    }
+    /**
+     * Given an interpolation factor in the range `[0,1]`, this method returns an updated
+     * interpolation factor in the same range that can be ued to sample equidistant points
+     * from a curve.
+     *
+     * @param {number} u - The interpolation factor.
+     * @param {?number} distance - An optional distance on the curve.
+     * @return {number} The updated interpolation factor.
+     */
+    getUtoTmapping(u, distance = null) {
+      const arcLengths = this.getLengths();
+      let i = 0;
+      const il = arcLengths.length;
+      let targetArcLength;
+      if (distance) {
+        targetArcLength = distance;
+      } else {
+        targetArcLength = u * arcLengths[il - 1];
+      }
+      let low = 0, high = il - 1, comparison;
+      while (low <= high) {
+        i = Math.floor(low + (high - low) / 2);
+        comparison = arcLengths[i] - targetArcLength;
+        if (comparison < 0) {
+          low = i + 1;
+        } else if (comparison > 0) {
+          high = i - 1;
+        } else {
+          high = i;
+          break;
+        }
+      }
+      i = high;
+      if (arcLengths[i] === targetArcLength) {
+        return i / (il - 1);
+      }
+      const lengthBefore = arcLengths[i];
+      const lengthAfter = arcLengths[i + 1];
+      const segmentLength = lengthAfter - lengthBefore;
+      const segmentFraction = (targetArcLength - lengthBefore) / segmentLength;
+      const t = (i + segmentFraction) / (il - 1);
+      return t;
+    }
+    /**
+     * Returns a unit vector tangent for the given interpolation factor.
+     * If the derived curve does not implement its tangent derivation,
+     * two points a small delta apart will be used to find its gradient
+     * which seems to give a reasonable approximation.
+     *
+     * @param {number} t - The interpolation factor.
+     * @param {(Vector2|Vector3)} [optionalTarget] - The optional target vector the result is written to.
+     * @return {(Vector2|Vector3)} The tangent vector.
+     */
+    getTangent(t, optionalTarget) {
+      const delta = 1e-4;
+      let t1 = t - delta;
+      let t2 = t + delta;
+      if (t1 < 0) t1 = 0;
+      if (t2 > 1) t2 = 1;
+      const pt1 = this.getPoint(t1);
+      const pt2 = this.getPoint(t2);
+      const tangent = optionalTarget || (pt1.isVector2 ? new Vector2() : new Vector3());
+      tangent.copy(pt2).sub(pt1).normalize();
+      return tangent;
+    }
+    /**
+     * Same as {@link Curve#getTangent} but with equidistant samples.
+     *
+     * @param {number} u - The interpolation factor.
+     * @param {(Vector2|Vector3)} [optionalTarget] - The optional target vector the result is written to.
+     * @return {(Vector2|Vector3)} The tangent vector.
+     * @see {@link Curve#getPointAt}
+     */
+    getTangentAt(u, optionalTarget) {
+      const t = this.getUtoTmapping(u);
+      return this.getTangent(t, optionalTarget);
+    }
+    /**
+     * Generates the Frenet Frames. Requires a curve definition in 3D space. Used
+     * in geometries like {@link TubeGeometry} or {@link ExtrudeGeometry}.
+     *
+     * @param {number} segments - The number of segments.
+     * @param {boolean} [closed=false] - Whether the curve is closed or not.
+     * @return {{tangents: Array<Vector3>, normals: Array<Vector3>, binormals: Array<Vector3>}} The Frenet Frames.
+     */
+    computeFrenetFrames(segments, closed = false) {
+      const normal = new Vector3();
+      const tangents = [];
+      const normals = [];
+      const binormals = [];
+      const vec = new Vector3();
+      const mat = new Matrix4();
+      for (let i = 0; i <= segments; i++) {
+        const u = i / segments;
+        tangents[i] = this.getTangentAt(u, new Vector3());
+      }
+      normals[0] = new Vector3();
+      binormals[0] = new Vector3();
+      let min = Number.MAX_VALUE;
+      const tx = Math.abs(tangents[0].x);
+      const ty = Math.abs(tangents[0].y);
+      const tz = Math.abs(tangents[0].z);
+      if (tx <= min) {
+        min = tx;
+        normal.set(1, 0, 0);
+      }
+      if (ty <= min) {
+        min = ty;
+        normal.set(0, 1, 0);
+      }
+      if (tz <= min) {
+        normal.set(0, 0, 1);
+      }
+      vec.crossVectors(tangents[0], normal).normalize();
+      normals[0].crossVectors(tangents[0], vec);
+      binormals[0].crossVectors(tangents[0], normals[0]);
+      for (let i = 1; i <= segments; i++) {
+        normals[i] = normals[i - 1].clone();
+        binormals[i] = binormals[i - 1].clone();
+        vec.crossVectors(tangents[i - 1], tangents[i]);
+        if (vec.length() > Number.EPSILON) {
+          vec.normalize();
+          const theta = Math.acos(clamp(tangents[i - 1].dot(tangents[i]), -1, 1));
+          normals[i].applyMatrix4(mat.makeRotationAxis(vec, theta));
+        }
+        binormals[i].crossVectors(tangents[i], normals[i]);
+      }
+      if (closed === true) {
+        let theta = Math.acos(clamp(normals[0].dot(normals[segments]), -1, 1));
+        theta /= segments;
+        if (tangents[0].dot(vec.crossVectors(normals[0], normals[segments])) > 0) {
+          theta = -theta;
+        }
+        for (let i = 1; i <= segments; i++) {
+          normals[i].applyMatrix4(mat.makeRotationAxis(tangents[i], theta * i));
+          binormals[i].crossVectors(tangents[i], normals[i]);
+        }
+      }
+      return {
+        tangents,
+        normals,
+        binormals
+      };
+    }
+    /**
+     * Returns a new curve with copied values from this instance.
+     *
+     * @return {Curve} A clone of this instance.
+     */
+    clone() {
+      return new this.constructor().copy(this);
+    }
+    /**
+     * Copies the values of the given curve to this instance.
+     *
+     * @param {Curve} source - The curve to copy.
+     * @return {Curve} A reference to this curve.
+     */
+    copy(source) {
+      this.arcLengthDivisions = source.arcLengthDivisions;
+      return this;
+    }
+    /**
+     * Serializes the curve into JSON.
+     *
+     * @return {Object} A JSON object representing the serialized curve.
+     * @see {@link ObjectLoader#parse}
+     */
+    toJSON() {
+      const data = {
+        metadata: {
+          version: 4.7,
+          type: "Curve",
+          generator: "Curve.toJSON"
+        }
+      };
+      data.arcLengthDivisions = this.arcLengthDivisions;
+      data.type = this.type;
+      return data;
+    }
+    /**
+     * Deserializes the curve from the given JSON.
+     *
+     * @param {Object} json - The JSON holding the serialized curve.
+     * @return {Curve} A reference to this curve.
+     */
+    fromJSON(json) {
+      this.arcLengthDivisions = json.arcLengthDivisions;
+      return this;
+    }
+  };
+  var EllipseCurve = class extends Curve {
+    /**
+     * Constructs a new ellipse curve.
+     *
+     * @param {number} [aX=0] - The X center of the ellipse.
+     * @param {number} [aY=0] - The Y center of the ellipse.
+     * @param {number} [xRadius=1] - The radius of the ellipse in the x direction.
+     * @param {number} [yRadius=1] - The radius of the ellipse in the y direction.
+     * @param {number} [aStartAngle=0] - The start angle of the curve in radians starting from the positive X axis.
+     * @param {number} [aEndAngle=Math.PI*2] - The end angle of the curve in radians starting from the positive X axis.
+     * @param {boolean} [aClockwise=false] - Whether the ellipse is drawn clockwise or not.
+     * @param {number} [aRotation=0] - The rotation angle of the ellipse in radians, counterclockwise from the positive X axis.
+     */
+    constructor(aX = 0, aY = 0, xRadius = 1, yRadius = 1, aStartAngle = 0, aEndAngle = Math.PI * 2, aClockwise = false, aRotation = 0) {
+      super();
+      this.isEllipseCurve = true;
+      this.type = "EllipseCurve";
+      this.aX = aX;
+      this.aY = aY;
+      this.xRadius = xRadius;
+      this.yRadius = yRadius;
+      this.aStartAngle = aStartAngle;
+      this.aEndAngle = aEndAngle;
+      this.aClockwise = aClockwise;
+      this.aRotation = aRotation;
+    }
+    /**
+     * Returns a point on the curve.
+     *
+     * @param {number} t - A interpolation factor representing a position on the curve. Must be in the range `[0,1]`.
+     * @param {Vector2} [optionalTarget] - The optional target vector the result is written to.
+     * @return {Vector2} The position on the curve.
+     */
+    getPoint(t, optionalTarget = new Vector2()) {
+      const point = optionalTarget;
+      const twoPi = Math.PI * 2;
+      let deltaAngle = this.aEndAngle - this.aStartAngle;
+      const samePoints = Math.abs(deltaAngle) < Number.EPSILON;
+      while (deltaAngle < 0) deltaAngle += twoPi;
+      while (deltaAngle > twoPi) deltaAngle -= twoPi;
+      if (deltaAngle < Number.EPSILON) {
+        if (samePoints) {
+          deltaAngle = 0;
+        } else {
+          deltaAngle = twoPi;
+        }
+      }
+      if (this.aClockwise === true && !samePoints) {
+        if (deltaAngle === twoPi) {
+          deltaAngle = -twoPi;
+        } else {
+          deltaAngle = deltaAngle - twoPi;
+        }
+      }
+      const angle = this.aStartAngle + t * deltaAngle;
+      let x = this.aX + this.xRadius * Math.cos(angle);
+      let y = this.aY + this.yRadius * Math.sin(angle);
+      if (this.aRotation !== 0) {
+        const cos = Math.cos(this.aRotation);
+        const sin = Math.sin(this.aRotation);
+        const tx = x - this.aX;
+        const ty = y - this.aY;
+        x = tx * cos - ty * sin + this.aX;
+        y = tx * sin + ty * cos + this.aY;
+      }
+      return point.set(x, y);
+    }
+    copy(source) {
+      super.copy(source);
+      this.aX = source.aX;
+      this.aY = source.aY;
+      this.xRadius = source.xRadius;
+      this.yRadius = source.yRadius;
+      this.aStartAngle = source.aStartAngle;
+      this.aEndAngle = source.aEndAngle;
+      this.aClockwise = source.aClockwise;
+      this.aRotation = source.aRotation;
+      return this;
+    }
+    toJSON() {
+      const data = super.toJSON();
+      data.aX = this.aX;
+      data.aY = this.aY;
+      data.xRadius = this.xRadius;
+      data.yRadius = this.yRadius;
+      data.aStartAngle = this.aStartAngle;
+      data.aEndAngle = this.aEndAngle;
+      data.aClockwise = this.aClockwise;
+      data.aRotation = this.aRotation;
+      return data;
+    }
+    fromJSON(json) {
+      super.fromJSON(json);
+      this.aX = json.aX;
+      this.aY = json.aY;
+      this.xRadius = json.xRadius;
+      this.yRadius = json.yRadius;
+      this.aStartAngle = json.aStartAngle;
+      this.aEndAngle = json.aEndAngle;
+      this.aClockwise = json.aClockwise;
+      this.aRotation = json.aRotation;
+      return this;
+    }
+  };
+  var ArcCurve = class extends EllipseCurve {
+    /**
+     * Constructs a new arc curve.
+     *
+     * @param {number} [aX=0] - The X center of the ellipse.
+     * @param {number} [aY=0] - The Y center of the ellipse.
+     * @param {number} [aRadius=1] - The radius of the ellipse in the x direction.
+     * @param {number} [aStartAngle=0] - The start angle of the curve in radians starting from the positive X axis.
+     * @param {number} [aEndAngle=Math.PI*2] - The end angle of the curve in radians starting from the positive X axis.
+     * @param {boolean} [aClockwise=false] - Whether the ellipse is drawn clockwise or not.
+     */
+    constructor(aX, aY, aRadius, aStartAngle, aEndAngle, aClockwise) {
+      super(aX, aY, aRadius, aRadius, aStartAngle, aEndAngle, aClockwise);
+      this.isArcCurve = true;
+      this.type = "ArcCurve";
+    }
+  };
+  function CubicPoly() {
+    let c0 = 0, c1 = 0, c2 = 0, c3 = 0;
+    function init(x0, x1, t0, t1) {
+      c0 = x0;
+      c1 = t0;
+      c2 = -3 * x0 + 3 * x1 - 2 * t0 - t1;
+      c3 = 2 * x0 - 2 * x1 + t0 + t1;
+    }
+    return {
+      initCatmullRom: function(x0, x1, x2, x3, tension) {
+        init(x1, x2, tension * (x2 - x0), tension * (x3 - x1));
+      },
+      initNonuniformCatmullRom: function(x0, x1, x2, x3, dt0, dt1, dt2) {
+        let t1 = (x1 - x0) / dt0 - (x2 - x0) / (dt0 + dt1) + (x2 - x1) / dt1;
+        let t2 = (x2 - x1) / dt1 - (x3 - x1) / (dt1 + dt2) + (x3 - x2) / dt2;
+        t1 *= dt1;
+        t2 *= dt1;
+        init(x1, x2, t1, t2);
+      },
+      calc: function(t) {
+        const t2 = t * t;
+        const t3 = t2 * t;
+        return c0 + c1 * t + c2 * t2 + c3 * t3;
+      }
+    };
+  }
+  var tmp = /* @__PURE__ */ new Vector3();
+  var tmp2 = /* @__PURE__ */ new Vector3();
+  var px = /* @__PURE__ */ new CubicPoly();
+  var py = /* @__PURE__ */ new CubicPoly();
+  var pz = /* @__PURE__ */ new CubicPoly();
+  var CatmullRomCurve3 = class extends Curve {
+    /**
+     * Constructs a new Catmull-Rom curve.
+     *
+     * @param {Array<Vector3>} [points] - An array of 3D points defining the curve.
+     * @param {boolean} [closed=false] - Whether the curve is closed or not.
+     * @param {('centripetal'|'chordal'|'catmullrom')} [curveType='centripetal'] - The curve type.
+     * @param {number} [tension=0.5] - Tension of the curve.
+     */
+    constructor(points = [], closed = false, curveType = "centripetal", tension = 0.5) {
+      super();
+      this.isCatmullRomCurve3 = true;
+      this.type = "CatmullRomCurve3";
+      this.points = points;
+      this.closed = closed;
+      this.curveType = curveType;
+      this.tension = tension;
+    }
+    /**
+     * Returns a point on the curve.
+     *
+     * @param {number} t - A interpolation factor representing a position on the curve. Must be in the range `[0,1]`.
+     * @param {Vector3} [optionalTarget] - The optional target vector the result is written to.
+     * @return {Vector3} The position on the curve.
+     */
+    getPoint(t, optionalTarget = new Vector3()) {
+      const point = optionalTarget;
+      const points = this.points;
+      const l = points.length;
+      const p = (l - (this.closed ? 0 : 1)) * t;
+      let intPoint = Math.floor(p);
+      let weight = p - intPoint;
+      if (this.closed) {
+        intPoint += intPoint > 0 ? 0 : (Math.floor(Math.abs(intPoint) / l) + 1) * l;
+      } else if (weight === 0 && intPoint === l - 1) {
+        intPoint = l - 2;
+        weight = 1;
+      }
+      let p0, p3;
+      if (this.closed || intPoint > 0) {
+        p0 = points[(intPoint - 1) % l];
+      } else {
+        tmp2.subVectors(points[0], points[1]).add(points[0]);
+        p0 = tmp2;
+      }
+      const p1 = points[intPoint % l];
+      const p2 = points[(intPoint + 1) % l];
+      if (this.closed || intPoint + 2 < l) {
+        p3 = points[(intPoint + 2) % l];
+      } else {
+        tmp.subVectors(points[l - 1], points[l - 2]).add(points[l - 1]);
+        p3 = tmp;
+      }
+      if (this.curveType === "centripetal" || this.curveType === "chordal") {
+        const pow = this.curveType === "chordal" ? 0.5 : 0.25;
+        let dt0 = Math.pow(p0.distanceToSquared(p1), pow);
+        let dt1 = Math.pow(p1.distanceToSquared(p2), pow);
+        let dt2 = Math.pow(p2.distanceToSquared(p3), pow);
+        if (dt1 < 1e-4) dt1 = 1;
+        if (dt0 < 1e-4) dt0 = dt1;
+        if (dt2 < 1e-4) dt2 = dt1;
+        px.initNonuniformCatmullRom(p0.x, p1.x, p2.x, p3.x, dt0, dt1, dt2);
+        py.initNonuniformCatmullRom(p0.y, p1.y, p2.y, p3.y, dt0, dt1, dt2);
+        pz.initNonuniformCatmullRom(p0.z, p1.z, p2.z, p3.z, dt0, dt1, dt2);
+      } else if (this.curveType === "catmullrom") {
+        px.initCatmullRom(p0.x, p1.x, p2.x, p3.x, this.tension);
+        py.initCatmullRom(p0.y, p1.y, p2.y, p3.y, this.tension);
+        pz.initCatmullRom(p0.z, p1.z, p2.z, p3.z, this.tension);
+      }
+      point.set(
+        px.calc(weight),
+        py.calc(weight),
+        pz.calc(weight)
+      );
+      return point;
+    }
+    copy(source) {
+      super.copy(source);
+      this.points = [];
+      for (let i = 0, l = source.points.length; i < l; i++) {
+        const point = source.points[i];
+        this.points.push(point.clone());
+      }
+      this.closed = source.closed;
+      this.curveType = source.curveType;
+      this.tension = source.tension;
+      return this;
+    }
+    toJSON() {
+      const data = super.toJSON();
+      data.points = [];
+      for (let i = 0, l = this.points.length; i < l; i++) {
+        const point = this.points[i];
+        data.points.push(point.toArray());
+      }
+      data.closed = this.closed;
+      data.curveType = this.curveType;
+      data.tension = this.tension;
+      return data;
+    }
+    fromJSON(json) {
+      super.fromJSON(json);
+      this.points = [];
+      for (let i = 0, l = json.points.length; i < l; i++) {
+        const point = json.points[i];
+        this.points.push(new Vector3().fromArray(point));
+      }
+      this.closed = json.closed;
+      this.curveType = json.curveType;
+      this.tension = json.tension;
+      return this;
+    }
+  };
+  function CatmullRom(t, p0, p1, p2, p3) {
+    const v0 = (p2 - p0) * 0.5;
+    const v1 = (p3 - p1) * 0.5;
+    const t2 = t * t;
+    const t3 = t * t2;
+    return (2 * p1 - 2 * p2 + v0 + v1) * t3 + (-3 * p1 + 3 * p2 - 2 * v0 - v1) * t2 + v0 * t + p1;
+  }
+  function QuadraticBezierP0(t, p) {
+    const k = 1 - t;
+    return k * k * p;
+  }
+  function QuadraticBezierP1(t, p) {
+    return 2 * (1 - t) * t * p;
+  }
+  function QuadraticBezierP2(t, p) {
+    return t * t * p;
+  }
+  function QuadraticBezier(t, p0, p1, p2) {
+    return QuadraticBezierP0(t, p0) + QuadraticBezierP1(t, p1) + QuadraticBezierP2(t, p2);
+  }
+  function CubicBezierP0(t, p) {
+    const k = 1 - t;
+    return k * k * k * p;
+  }
+  function CubicBezierP1(t, p) {
+    const k = 1 - t;
+    return 3 * k * k * t * p;
+  }
+  function CubicBezierP2(t, p) {
+    return 3 * (1 - t) * t * t * p;
+  }
+  function CubicBezierP3(t, p) {
+    return t * t * t * p;
+  }
+  function CubicBezier(t, p0, p1, p2, p3) {
+    return CubicBezierP0(t, p0) + CubicBezierP1(t, p1) + CubicBezierP2(t, p2) + CubicBezierP3(t, p3);
+  }
+  var CubicBezierCurve = class extends Curve {
+    /**
+     * Constructs a new Cubic Bezier curve.
+     *
+     * @param {Vector2} [v0] - The start point.
+     * @param {Vector2} [v1] - The first control point.
+     * @param {Vector2} [v2] - The second control point.
+     * @param {Vector2} [v3] - The end point.
+     */
+    constructor(v0 = new Vector2(), v1 = new Vector2(), v2 = new Vector2(), v3 = new Vector2()) {
+      super();
+      this.isCubicBezierCurve = true;
+      this.type = "CubicBezierCurve";
+      this.v0 = v0;
+      this.v1 = v1;
+      this.v2 = v2;
+      this.v3 = v3;
+    }
+    /**
+     * Returns a point on the curve.
+     *
+     * @param {number} t - A interpolation factor representing a position on the curve. Must be in the range `[0,1]`.
+     * @param {Vector2} [optionalTarget] - The optional target vector the result is written to.
+     * @return {Vector2} The position on the curve.
+     */
+    getPoint(t, optionalTarget = new Vector2()) {
+      const point = optionalTarget;
+      const v0 = this.v0, v1 = this.v1, v2 = this.v2, v3 = this.v3;
+      point.set(
+        CubicBezier(t, v0.x, v1.x, v2.x, v3.x),
+        CubicBezier(t, v0.y, v1.y, v2.y, v3.y)
+      );
+      return point;
+    }
+    copy(source) {
+      super.copy(source);
+      this.v0.copy(source.v0);
+      this.v1.copy(source.v1);
+      this.v2.copy(source.v2);
+      this.v3.copy(source.v3);
+      return this;
+    }
+    toJSON() {
+      const data = super.toJSON();
+      data.v0 = this.v0.toArray();
+      data.v1 = this.v1.toArray();
+      data.v2 = this.v2.toArray();
+      data.v3 = this.v3.toArray();
+      return data;
+    }
+    fromJSON(json) {
+      super.fromJSON(json);
+      this.v0.fromArray(json.v0);
+      this.v1.fromArray(json.v1);
+      this.v2.fromArray(json.v2);
+      this.v3.fromArray(json.v3);
+      return this;
+    }
+  };
+  var CubicBezierCurve3 = class extends Curve {
+    /**
+     * Constructs a new Cubic Bezier curve.
+     *
+     * @param {Vector3} [v0] - The start point.
+     * @param {Vector3} [v1] - The first control point.
+     * @param {Vector3} [v2] - The second control point.
+     * @param {Vector3} [v3] - The end point.
+     */
+    constructor(v0 = new Vector3(), v1 = new Vector3(), v2 = new Vector3(), v3 = new Vector3()) {
+      super();
+      this.isCubicBezierCurve3 = true;
+      this.type = "CubicBezierCurve3";
+      this.v0 = v0;
+      this.v1 = v1;
+      this.v2 = v2;
+      this.v3 = v3;
+    }
+    /**
+     * Returns a point on the curve.
+     *
+     * @param {number} t - A interpolation factor representing a position on the curve. Must be in the range `[0,1]`.
+     * @param {Vector3} [optionalTarget] - The optional target vector the result is written to.
+     * @return {Vector3} The position on the curve.
+     */
+    getPoint(t, optionalTarget = new Vector3()) {
+      const point = optionalTarget;
+      const v0 = this.v0, v1 = this.v1, v2 = this.v2, v3 = this.v3;
+      point.set(
+        CubicBezier(t, v0.x, v1.x, v2.x, v3.x),
+        CubicBezier(t, v0.y, v1.y, v2.y, v3.y),
+        CubicBezier(t, v0.z, v1.z, v2.z, v3.z)
+      );
+      return point;
+    }
+    copy(source) {
+      super.copy(source);
+      this.v0.copy(source.v0);
+      this.v1.copy(source.v1);
+      this.v2.copy(source.v2);
+      this.v3.copy(source.v3);
+      return this;
+    }
+    toJSON() {
+      const data = super.toJSON();
+      data.v0 = this.v0.toArray();
+      data.v1 = this.v1.toArray();
+      data.v2 = this.v2.toArray();
+      data.v3 = this.v3.toArray();
+      return data;
+    }
+    fromJSON(json) {
+      super.fromJSON(json);
+      this.v0.fromArray(json.v0);
+      this.v1.fromArray(json.v1);
+      this.v2.fromArray(json.v2);
+      this.v3.fromArray(json.v3);
+      return this;
+    }
+  };
+  var LineCurve = class extends Curve {
+    /**
+     * Constructs a new line curve.
+     *
+     * @param {Vector2} [v1] - The start point.
+     * @param {Vector2} [v2] - The end point.
+     */
+    constructor(v1 = new Vector2(), v2 = new Vector2()) {
+      super();
+      this.isLineCurve = true;
+      this.type = "LineCurve";
+      this.v1 = v1;
+      this.v2 = v2;
+    }
+    /**
+     * Returns a point on the line.
+     *
+     * @param {number} t - A interpolation factor representing a position on the line. Must be in the range `[0,1]`.
+     * @param {Vector2} [optionalTarget] - The optional target vector the result is written to.
+     * @return {Vector2} The position on the line.
+     */
+    getPoint(t, optionalTarget = new Vector2()) {
+      const point = optionalTarget;
+      if (t === 1) {
+        point.copy(this.v2);
+      } else {
+        point.copy(this.v2).sub(this.v1);
+        point.multiplyScalar(t).add(this.v1);
+      }
+      return point;
+    }
+    // Line curve is linear, so we can overwrite default getPointAt
+    getPointAt(u, optionalTarget) {
+      return this.getPoint(u, optionalTarget);
+    }
+    getTangent(t, optionalTarget = new Vector2()) {
+      return optionalTarget.subVectors(this.v2, this.v1).normalize();
+    }
+    getTangentAt(u, optionalTarget) {
+      return this.getTangent(u, optionalTarget);
+    }
+    copy(source) {
+      super.copy(source);
+      this.v1.copy(source.v1);
+      this.v2.copy(source.v2);
+      return this;
+    }
+    toJSON() {
+      const data = super.toJSON();
+      data.v1 = this.v1.toArray();
+      data.v2 = this.v2.toArray();
+      return data;
+    }
+    fromJSON(json) {
+      super.fromJSON(json);
+      this.v1.fromArray(json.v1);
+      this.v2.fromArray(json.v2);
+      return this;
+    }
+  };
+  var LineCurve3 = class extends Curve {
+    /**
+     * Constructs a new line curve.
+     *
+     * @param {Vector3} [v1] - The start point.
+     * @param {Vector3} [v2] - The end point.
+     */
+    constructor(v1 = new Vector3(), v2 = new Vector3()) {
+      super();
+      this.isLineCurve3 = true;
+      this.type = "LineCurve3";
+      this.v1 = v1;
+      this.v2 = v2;
+    }
+    /**
+     * Returns a point on the line.
+     *
+     * @param {number} t - A interpolation factor representing a position on the line. Must be in the range `[0,1]`.
+     * @param {Vector3} [optionalTarget] - The optional target vector the result is written to.
+     * @return {Vector3} The position on the line.
+     */
+    getPoint(t, optionalTarget = new Vector3()) {
+      const point = optionalTarget;
+      if (t === 1) {
+        point.copy(this.v2);
+      } else {
+        point.copy(this.v2).sub(this.v1);
+        point.multiplyScalar(t).add(this.v1);
+      }
+      return point;
+    }
+    // Line curve is linear, so we can overwrite default getPointAt
+    getPointAt(u, optionalTarget) {
+      return this.getPoint(u, optionalTarget);
+    }
+    getTangent(t, optionalTarget = new Vector3()) {
+      return optionalTarget.subVectors(this.v2, this.v1).normalize();
+    }
+    getTangentAt(u, optionalTarget) {
+      return this.getTangent(u, optionalTarget);
+    }
+    copy(source) {
+      super.copy(source);
+      this.v1.copy(source.v1);
+      this.v2.copy(source.v2);
+      return this;
+    }
+    toJSON() {
+      const data = super.toJSON();
+      data.v1 = this.v1.toArray();
+      data.v2 = this.v2.toArray();
+      return data;
+    }
+    fromJSON(json) {
+      super.fromJSON(json);
+      this.v1.fromArray(json.v1);
+      this.v2.fromArray(json.v2);
+      return this;
+    }
+  };
+  var QuadraticBezierCurve = class extends Curve {
+    /**
+     * Constructs a new Quadratic Bezier curve.
+     *
+     * @param {Vector2} [v0] - The start point.
+     * @param {Vector2} [v1] - The control point.
+     * @param {Vector2} [v2] - The end point.
+     */
+    constructor(v0 = new Vector2(), v1 = new Vector2(), v2 = new Vector2()) {
+      super();
+      this.isQuadraticBezierCurve = true;
+      this.type = "QuadraticBezierCurve";
+      this.v0 = v0;
+      this.v1 = v1;
+      this.v2 = v2;
+    }
+    /**
+     * Returns a point on the curve.
+     *
+     * @param {number} t - A interpolation factor representing a position on the curve. Must be in the range `[0,1]`.
+     * @param {Vector2} [optionalTarget] - The optional target vector the result is written to.
+     * @return {Vector2} The position on the curve.
+     */
+    getPoint(t, optionalTarget = new Vector2()) {
+      const point = optionalTarget;
+      const v0 = this.v0, v1 = this.v1, v2 = this.v2;
+      point.set(
+        QuadraticBezier(t, v0.x, v1.x, v2.x),
+        QuadraticBezier(t, v0.y, v1.y, v2.y)
+      );
+      return point;
+    }
+    copy(source) {
+      super.copy(source);
+      this.v0.copy(source.v0);
+      this.v1.copy(source.v1);
+      this.v2.copy(source.v2);
+      return this;
+    }
+    toJSON() {
+      const data = super.toJSON();
+      data.v0 = this.v0.toArray();
+      data.v1 = this.v1.toArray();
+      data.v2 = this.v2.toArray();
+      return data;
+    }
+    fromJSON(json) {
+      super.fromJSON(json);
+      this.v0.fromArray(json.v0);
+      this.v1.fromArray(json.v1);
+      this.v2.fromArray(json.v2);
+      return this;
+    }
+  };
+  var QuadraticBezierCurve3 = class extends Curve {
+    /**
+     * Constructs a new Quadratic Bezier curve.
+     *
+     * @param {Vector3} [v0] - The start point.
+     * @param {Vector3} [v1] - The control point.
+     * @param {Vector3} [v2] - The end point.
+     */
+    constructor(v0 = new Vector3(), v1 = new Vector3(), v2 = new Vector3()) {
+      super();
+      this.isQuadraticBezierCurve3 = true;
+      this.type = "QuadraticBezierCurve3";
+      this.v0 = v0;
+      this.v1 = v1;
+      this.v2 = v2;
+    }
+    /**
+     * Returns a point on the curve.
+     *
+     * @param {number} t - A interpolation factor representing a position on the curve. Must be in the range `[0,1]`.
+     * @param {Vector3} [optionalTarget] - The optional target vector the result is written to.
+     * @return {Vector3} The position on the curve.
+     */
+    getPoint(t, optionalTarget = new Vector3()) {
+      const point = optionalTarget;
+      const v0 = this.v0, v1 = this.v1, v2 = this.v2;
+      point.set(
+        QuadraticBezier(t, v0.x, v1.x, v2.x),
+        QuadraticBezier(t, v0.y, v1.y, v2.y),
+        QuadraticBezier(t, v0.z, v1.z, v2.z)
+      );
+      return point;
+    }
+    copy(source) {
+      super.copy(source);
+      this.v0.copy(source.v0);
+      this.v1.copy(source.v1);
+      this.v2.copy(source.v2);
+      return this;
+    }
+    toJSON() {
+      const data = super.toJSON();
+      data.v0 = this.v0.toArray();
+      data.v1 = this.v1.toArray();
+      data.v2 = this.v2.toArray();
+      return data;
+    }
+    fromJSON(json) {
+      super.fromJSON(json);
+      this.v0.fromArray(json.v0);
+      this.v1.fromArray(json.v1);
+      this.v2.fromArray(json.v2);
+      return this;
+    }
+  };
+  var SplineCurve = class extends Curve {
+    /**
+     * Constructs a new 2D spline curve.
+     *
+     * @param {Array<Vector2>} [points] -  An array of 2D points defining the curve.
+     */
+    constructor(points = []) {
+      super();
+      this.isSplineCurve = true;
+      this.type = "SplineCurve";
+      this.points = points;
+    }
+    /**
+     * Returns a point on the curve.
+     *
+     * @param {number} t - A interpolation factor representing a position on the curve. Must be in the range `[0,1]`.
+     * @param {Vector2} [optionalTarget] - The optional target vector the result is written to.
+     * @return {Vector2} The position on the curve.
+     */
+    getPoint(t, optionalTarget = new Vector2()) {
+      const point = optionalTarget;
+      const points = this.points;
+      const p = (points.length - 1) * t;
+      const intPoint = Math.floor(p);
+      const weight = p - intPoint;
+      const p0 = points[intPoint === 0 ? intPoint : intPoint - 1];
+      const p1 = points[intPoint];
+      const p2 = points[intPoint > points.length - 2 ? points.length - 1 : intPoint + 1];
+      const p3 = points[intPoint > points.length - 3 ? points.length - 1 : intPoint + 2];
+      point.set(
+        CatmullRom(weight, p0.x, p1.x, p2.x, p3.x),
+        CatmullRom(weight, p0.y, p1.y, p2.y, p3.y)
+      );
+      return point;
+    }
+    copy(source) {
+      super.copy(source);
+      this.points = [];
+      for (let i = 0, l = source.points.length; i < l; i++) {
+        const point = source.points[i];
+        this.points.push(point.clone());
+      }
+      return this;
+    }
+    toJSON() {
+      const data = super.toJSON();
+      data.points = [];
+      for (let i = 0, l = this.points.length; i < l; i++) {
+        const point = this.points[i];
+        data.points.push(point.toArray());
+      }
+      return data;
+    }
+    fromJSON(json) {
+      super.fromJSON(json);
+      this.points = [];
+      for (let i = 0, l = json.points.length; i < l; i++) {
+        const point = json.points[i];
+        this.points.push(new Vector2().fromArray(point));
+      }
+      return this;
+    }
+  };
+  var Curves = /* @__PURE__ */ Object.freeze({
+    __proto__: null,
+    ArcCurve,
+    CatmullRomCurve3,
+    CubicBezierCurve,
+    CubicBezierCurve3,
+    EllipseCurve,
+    LineCurve,
+    LineCurve3,
+    QuadraticBezierCurve,
+    QuadraticBezierCurve3,
+    SplineCurve
+  });
+  var CurvePath = class extends Curve {
+    /**
+     * Constructs a new curve path.
+     */
+    constructor() {
+      super();
+      this.type = "CurvePath";
+      this.curves = [];
+      this.autoClose = false;
+    }
+    /**
+     * Adds a curve to this curve path.
+     *
+     * @param {Curve} curve - The curve to add.
+     */
+    add(curve) {
+      this.curves.push(curve);
+    }
+    /**
+     * Adds a line curve to close the path.
+     *
+     * @return {CurvePath} A reference to this curve path.
+     */
+    closePath() {
+      const startPoint = this.curves[0].getPoint(0);
+      const endPoint = this.curves[this.curves.length - 1].getPoint(1);
+      if (!startPoint.equals(endPoint)) {
+        const lineType = startPoint.isVector2 === true ? "LineCurve" : "LineCurve3";
+        this.curves.push(new Curves[lineType](endPoint, startPoint));
+      }
+      return this;
+    }
+    /**
+     * This method returns a vector in 2D or 3D space (depending on the curve definitions)
+     * for the given interpolation factor.
+     *
+     * @param {number} t - A interpolation factor representing a position on the curve. Must be in the range `[0,1]`.
+     * @param {(Vector2|Vector3)} [optionalTarget] - The optional target vector the result is written to.
+     * @return {?(Vector2|Vector3)} The position on the curve. It can be a 2D or 3D vector depending on the curve definition.
+     */
+    getPoint(t, optionalTarget) {
+      const d = t * this.getLength();
+      const curveLengths = this.getCurveLengths();
+      let i = 0;
+      while (i < curveLengths.length) {
+        if (curveLengths[i] >= d) {
+          const diff = curveLengths[i] - d;
+          const curve = this.curves[i];
+          const segmentLength = curve.getLength();
+          const u = segmentLength === 0 ? 0 : 1 - diff / segmentLength;
+          return curve.getPointAt(u, optionalTarget);
+        }
+        i++;
+      }
+      return null;
+    }
+    getLength() {
+      const lens = this.getCurveLengths();
+      return lens[lens.length - 1];
+    }
+    updateArcLengths() {
+      this.needsUpdate = true;
+      this.cacheLengths = null;
+      this.getCurveLengths();
+    }
+    /**
+     * Returns list of cumulative curve lengths of the defined curves.
+     *
+     * @return {Array<number>} The curve lengths.
+     */
+    getCurveLengths() {
+      if (this.cacheLengths && this.cacheLengths.length === this.curves.length) {
+        return this.cacheLengths;
+      }
+      const lengths = [];
+      let sums = 0;
+      for (let i = 0, l = this.curves.length; i < l; i++) {
+        sums += this.curves[i].getLength();
+        lengths.push(sums);
+      }
+      this.cacheLengths = lengths;
+      return lengths;
+    }
+    getSpacedPoints(divisions = 40) {
+      const points = [];
+      for (let i = 0; i <= divisions; i++) {
+        points.push(this.getPoint(i / divisions));
+      }
+      if (this.autoClose) {
+        points.push(points[0]);
+      }
+      return points;
+    }
+    getPoints(divisions = 12) {
+      const points = [];
+      let last;
+      for (let i = 0, curves = this.curves; i < curves.length; i++) {
+        const curve = curves[i];
+        const resolution = curve.isEllipseCurve ? divisions * 2 : curve.isLineCurve || curve.isLineCurve3 ? 1 : curve.isSplineCurve ? divisions * curve.points.length : divisions;
+        const pts = curve.getPoints(resolution);
+        for (let j = 0; j < pts.length; j++) {
+          const point = pts[j];
+          if (last && last.equals(point)) continue;
+          points.push(point);
+          last = point;
+        }
+      }
+      if (this.autoClose && points.length > 1 && !points[points.length - 1].equals(points[0])) {
+        points.push(points[0]);
+      }
+      return points;
+    }
+    copy(source) {
+      super.copy(source);
+      this.curves = [];
+      for (let i = 0, l = source.curves.length; i < l; i++) {
+        const curve = source.curves[i];
+        this.curves.push(curve.clone());
+      }
+      this.autoClose = source.autoClose;
+      return this;
+    }
+    toJSON() {
+      const data = super.toJSON();
+      data.autoClose = this.autoClose;
+      data.curves = [];
+      for (let i = 0, l = this.curves.length; i < l; i++) {
+        const curve = this.curves[i];
+        data.curves.push(curve.toJSON());
+      }
+      return data;
+    }
+    fromJSON(json) {
+      super.fromJSON(json);
+      this.autoClose = json.autoClose;
+      this.curves = [];
+      for (let i = 0, l = json.curves.length; i < l; i++) {
+        const curve = json.curves[i];
+        this.curves.push(new Curves[curve.type]().fromJSON(curve));
+      }
+      return this;
+    }
+  };
+  var Path = class extends CurvePath {
+    /**
+     * Constructs a new path.
+     *
+     * @param {Array<Vector2>} [points] - An array of 2D points defining the path.
+     */
+    constructor(points) {
+      super();
+      this.type = "Path";
+      this.currentPoint = new Vector2();
+      if (points) {
+        this.setFromPoints(points);
+      }
+    }
+    /**
+     * Creates a path from the given list of points. The points are added
+     * to the path as instances of {@link LineCurve}.
+     *
+     * @param {Array<Vector2>} points - An array of 2D points.
+     * @return {Path} A reference to this path.
+     */
+    setFromPoints(points) {
+      this.moveTo(points[0].x, points[0].y);
+      for (let i = 1, l = points.length; i < l; i++) {
+        this.lineTo(points[i].x, points[i].y);
+      }
+      return this;
+    }
+    /**
+     * Moves {@link Path#currentPoint} to the given point.
+     *
+     * @param {number} x - The x coordinate.
+     * @param {number} y - The y coordinate.
+     * @return {Path} A reference to this path.
+     */
+    moveTo(x, y) {
+      this.currentPoint.set(x, y);
+      return this;
+    }
+    /**
+     * Adds an instance of {@link LineCurve} to the path by connecting
+     * the current point with the given one.
+     *
+     * @param {number} x - The x coordinate of the end point.
+     * @param {number} y - The y coordinate of the end point.
+     * @return {Path} A reference to this path.
+     */
+    lineTo(x, y) {
+      const curve = new LineCurve(this.currentPoint.clone(), new Vector2(x, y));
+      this.curves.push(curve);
+      this.currentPoint.set(x, y);
+      return this;
+    }
+    /**
+     * Adds an instance of {@link QuadraticBezierCurve} to the path by connecting
+     * the current point with the given one.
+     *
+     * @param {number} aCPx - The x coordinate of the control point.
+     * @param {number} aCPy - The y coordinate of the control point.
+     * @param {number} aX - The x coordinate of the end point.
+     * @param {number} aY - The y coordinate of the end point.
+     * @return {Path} A reference to this path.
+     */
+    quadraticCurveTo(aCPx, aCPy, aX, aY) {
+      const curve = new QuadraticBezierCurve(
+        this.currentPoint.clone(),
+        new Vector2(aCPx, aCPy),
+        new Vector2(aX, aY)
+      );
+      this.curves.push(curve);
+      this.currentPoint.set(aX, aY);
+      return this;
+    }
+    /**
+     * Adds an instance of {@link CubicBezierCurve} to the path by connecting
+     * the current point with the given one.
+     *
+     * @param {number} aCP1x - The x coordinate of the first control point.
+     * @param {number} aCP1y - The y coordinate of the first control point.
+     * @param {number} aCP2x - The x coordinate of the second control point.
+     * @param {number} aCP2y - The y coordinate of the second control point.
+     * @param {number} aX - The x coordinate of the end point.
+     * @param {number} aY - The y coordinate of the end point.
+     * @return {Path} A reference to this path.
+     */
+    bezierCurveTo(aCP1x, aCP1y, aCP2x, aCP2y, aX, aY) {
+      const curve = new CubicBezierCurve(
+        this.currentPoint.clone(),
+        new Vector2(aCP1x, aCP1y),
+        new Vector2(aCP2x, aCP2y),
+        new Vector2(aX, aY)
+      );
+      this.curves.push(curve);
+      this.currentPoint.set(aX, aY);
+      return this;
+    }
+    /**
+     * Adds an instance of {@link SplineCurve} to the path by connecting
+     * the current point with the given list of points.
+     *
+     * @param {Array<Vector2>} pts - An array of points in 2D space.
+     * @return {Path} A reference to this path.
+     */
+    splineThru(pts) {
+      const npts = [this.currentPoint.clone()].concat(pts);
+      const curve = new SplineCurve(npts);
+      this.curves.push(curve);
+      this.currentPoint.copy(pts[pts.length - 1]);
+      return this;
+    }
+    /**
+     * Adds an arc as an instance of {@link EllipseCurve} to the path, positioned relative
+     * to the current point.
+     *
+     * @param {number} [aX=0] - The x coordinate of the center of the arc offsetted from the previous curve.
+     * @param {number} [aY=0] - The y coordinate of the center of the arc offsetted from the previous curve.
+     * @param {number} [aRadius=1] - The radius of the arc.
+     * @param {number} [aStartAngle=0] - The start angle in radians.
+     * @param {number} [aEndAngle=Math.PI*2] - The end angle in radians.
+     * @param {boolean} [aClockwise=false] - Whether to sweep the arc clockwise or not.
+     * @return {Path} A reference to this path.
+     */
+    arc(aX, aY, aRadius, aStartAngle, aEndAngle, aClockwise) {
+      const x0 = this.currentPoint.x;
+      const y0 = this.currentPoint.y;
+      this.absarc(
+        aX + x0,
+        aY + y0,
+        aRadius,
+        aStartAngle,
+        aEndAngle,
+        aClockwise
+      );
+      return this;
+    }
+    /**
+     * Adds an absolutely positioned arc as an instance of {@link EllipseCurve} to the path.
+     *
+     * @param {number} [aX=0] - The x coordinate of the center of the arc.
+     * @param {number} [aY=0] - The y coordinate of the center of the arc.
+     * @param {number} [aRadius=1] - The radius of the arc.
+     * @param {number} [aStartAngle=0] - The start angle in radians.
+     * @param {number} [aEndAngle=Math.PI*2] - The end angle in radians.
+     * @param {boolean} [aClockwise=false] - Whether to sweep the arc clockwise or not.
+     * @return {Path} A reference to this path.
+     */
+    absarc(aX, aY, aRadius, aStartAngle, aEndAngle, aClockwise) {
+      this.absellipse(aX, aY, aRadius, aRadius, aStartAngle, aEndAngle, aClockwise);
+      return this;
+    }
+    /**
+     * Adds an ellipse as an instance of {@link EllipseCurve} to the path, positioned relative
+     * to the current point
+     *
+     * @param {number} [aX=0] - The x coordinate of the center of the ellipse offsetted from the previous curve.
+     * @param {number} [aY=0] - The y coordinate of the center of the ellipse offsetted from the previous curve.
+     * @param {number} [xRadius=1] - The radius of the ellipse in the x axis.
+     * @param {number} [yRadius=1] - The radius of the ellipse in the y axis.
+     * @param {number} [aStartAngle=0] - The start angle in radians.
+     * @param {number} [aEndAngle=Math.PI*2] - The end angle in radians.
+     * @param {boolean} [aClockwise=false] - Whether to sweep the ellipse clockwise or not.
+     * @param {number} [aRotation=0] - The rotation angle of the ellipse in radians, counterclockwise from the positive X axis.
+     * @return {Path} A reference to this path.
+     */
+    ellipse(aX, aY, xRadius, yRadius, aStartAngle, aEndAngle, aClockwise, aRotation) {
+      const x0 = this.currentPoint.x;
+      const y0 = this.currentPoint.y;
+      this.absellipse(aX + x0, aY + y0, xRadius, yRadius, aStartAngle, aEndAngle, aClockwise, aRotation);
+      return this;
+    }
+    /**
+     * Adds an absolutely positioned ellipse as an instance of {@link EllipseCurve} to the path.
+     *
+     * @param {number} [aX=0] - The x coordinate of the absolute center of the ellipse.
+     * @param {number} [aY=0] - The y coordinate of the absolute center of the ellipse.
+     * @param {number} [xRadius=1] - The radius of the ellipse in the x axis.
+     * @param {number} [yRadius=1] - The radius of the ellipse in the y axis.
+     * @param {number} [aStartAngle=0] - The start angle in radians.
+     * @param {number} [aEndAngle=Math.PI*2] - The end angle in radians.
+     * @param {boolean} [aClockwise=false] - Whether to sweep the ellipse clockwise or not.
+     * @param {number} [aRotation=0] - The rotation angle of the ellipse in radians, counterclockwise from the positive X axis.
+     * @return {Path} A reference to this path.
+     */
+    absellipse(aX, aY, xRadius, yRadius, aStartAngle, aEndAngle, aClockwise, aRotation) {
+      const curve = new EllipseCurve(aX, aY, xRadius, yRadius, aStartAngle, aEndAngle, aClockwise, aRotation);
+      if (this.curves.length > 0) {
+        const firstPoint = curve.getPoint(0);
+        if (!firstPoint.equals(this.currentPoint)) {
+          this.lineTo(firstPoint.x, firstPoint.y);
+        }
+      }
+      this.curves.push(curve);
+      const lastPoint = curve.getPoint(1);
+      this.currentPoint.copy(lastPoint);
+      return this;
+    }
+    copy(source) {
+      super.copy(source);
+      this.currentPoint.copy(source.currentPoint);
+      return this;
+    }
+    toJSON() {
+      const data = super.toJSON();
+      data.currentPoint = this.currentPoint.toArray();
+      return data;
+    }
+    fromJSON(json) {
+      super.fromJSON(json);
+      this.currentPoint.fromArray(json.currentPoint);
+      return this;
+    }
+  };
+  var Shape = class extends Path {
+    /**
+     * Constructs a new shape.
+     *
+     * @param {Array<Vector2>} [points] - An array of 2D points defining the shape.
+     */
+    constructor(points) {
+      super(points);
+      this.uuid = generateUUID();
+      this.type = "Shape";
+      this.holes = [];
+    }
+    /**
+     * Returns an array representing each contour of the holes
+     * as a list of 2D points.
+     *
+     * @param {number} divisions - The fineness of the result.
+     * @return {Array<Array<Vector2>>} The holes as a series of 2D points.
+     */
+    getPointsHoles(divisions) {
+      const holesPts = [];
+      for (let i = 0, l = this.holes.length; i < l; i++) {
+        holesPts[i] = this.holes[i].getPoints(divisions);
+      }
+      return holesPts;
+    }
+    // get points of shape and holes (keypoints based on segments parameter)
+    /**
+     * Returns an object that holds contour data for the shape and its holes as
+     * arrays of 2D points.
+     *
+     * @param {number} divisions - The fineness of the result.
+     * @return {{shape:Array<Vector2>,holes:Array<Array<Vector2>>}} An object with contour data.
+     */
+    extractPoints(divisions) {
+      return {
+        shape: this.getPoints(divisions),
+        holes: this.getPointsHoles(divisions)
+      };
+    }
+    copy(source) {
+      super.copy(source);
+      this.holes = [];
+      for (let i = 0, l = source.holes.length; i < l; i++) {
+        const hole = source.holes[i];
+        this.holes.push(hole.clone());
+      }
+      return this;
+    }
+    toJSON() {
+      const data = super.toJSON();
+      data.uuid = this.uuid;
+      data.holes = [];
+      for (let i = 0, l = this.holes.length; i < l; i++) {
+        const hole = this.holes[i];
+        data.holes.push(hole.toJSON());
+      }
+      return data;
+    }
+    fromJSON(json) {
+      super.fromJSON(json);
+      this.uuid = json.uuid;
+      this.holes = [];
+      for (let i = 0, l = json.holes.length; i < l; i++) {
+        const hole = json.holes[i];
+        this.holes.push(new Path().fromJSON(hole));
+      }
+      return this;
+    }
+  };
+  function earcut(data, holeIndices, dim = 2) {
+    const hasHoles = holeIndices && holeIndices.length;
+    const outerLen = hasHoles ? holeIndices[0] * dim : data.length;
+    let outerNode = linkedList(data, 0, outerLen, dim, true);
+    const triangles = [];
+    if (!outerNode || outerNode.next === outerNode.prev) return triangles;
+    let minX, minY, invSize;
+    if (hasHoles) outerNode = eliminateHoles(data, holeIndices, outerNode, dim);
+    if (data.length > 80 * dim) {
+      minX = data[0];
+      minY = data[1];
+      let maxX = minX;
+      let maxY = minY;
+      for (let i = dim; i < outerLen; i += dim) {
+        const x = data[i];
+        const y = data[i + 1];
+        if (x < minX) minX = x;
+        if (y < minY) minY = y;
+        if (x > maxX) maxX = x;
+        if (y > maxY) maxY = y;
+      }
+      invSize = Math.max(maxX - minX, maxY - minY);
+      invSize = invSize !== 0 ? 32767 / invSize : 0;
+    }
+    earcutLinked(outerNode, triangles, dim, minX, minY, invSize, 0);
+    return triangles;
+  }
+  function linkedList(data, start, end, dim, clockwise) {
+    let last;
+    if (clockwise === signedArea(data, start, end, dim) > 0) {
+      for (let i = start; i < end; i += dim) last = insertNode(i / dim | 0, data[i], data[i + 1], last);
+    } else {
+      for (let i = end - dim; i >= start; i -= dim) last = insertNode(i / dim | 0, data[i], data[i + 1], last);
+    }
+    if (last && equals(last, last.next)) {
+      removeNode(last);
+      last = last.next;
+    }
+    return last;
+  }
+  function filterPoints(start, end) {
+    if (!start) return start;
+    if (!end) end = start;
+    let p = start, again;
+    do {
+      again = false;
+      if (!p.steiner && (equals(p, p.next) || area(p.prev, p, p.next) === 0)) {
+        removeNode(p);
+        p = end = p.prev;
+        if (p === p.next) break;
+        again = true;
+      } else {
+        p = p.next;
+      }
+    } while (again || p !== end);
+    return end;
+  }
+  function earcutLinked(ear, triangles, dim, minX, minY, invSize, pass) {
+    if (!ear) return;
+    if (!pass && invSize) indexCurve(ear, minX, minY, invSize);
+    let stop = ear;
+    while (ear.prev !== ear.next) {
+      const prev = ear.prev;
+      const next = ear.next;
+      if (invSize ? isEarHashed(ear, minX, minY, invSize) : isEar(ear)) {
+        triangles.push(prev.i, ear.i, next.i);
+        removeNode(ear);
+        ear = next.next;
+        stop = next.next;
+        continue;
+      }
+      ear = next;
+      if (ear === stop) {
+        if (!pass) {
+          earcutLinked(filterPoints(ear), triangles, dim, minX, minY, invSize, 1);
+        } else if (pass === 1) {
+          ear = cureLocalIntersections(filterPoints(ear), triangles);
+          earcutLinked(ear, triangles, dim, minX, minY, invSize, 2);
+        } else if (pass === 2) {
+          splitEarcut(ear, triangles, dim, minX, minY, invSize);
+        }
+        break;
+      }
+    }
+  }
+  function isEar(ear) {
+    const a = ear.prev, b = ear, c = ear.next;
+    if (area(a, b, c) >= 0) return false;
+    const ax = a.x, bx = b.x, cx = c.x, ay = a.y, by = b.y, cy = c.y;
+    const x0 = Math.min(ax, bx, cx), y0 = Math.min(ay, by, cy), x1 = Math.max(ax, bx, cx), y1 = Math.max(ay, by, cy);
+    let p = c.next;
+    while (p !== a) {
+      if (p.x >= x0 && p.x <= x1 && p.y >= y0 && p.y <= y1 && pointInTriangleExceptFirst(ax, ay, bx, by, cx, cy, p.x, p.y) && area(p.prev, p, p.next) >= 0) return false;
+      p = p.next;
+    }
+    return true;
+  }
+  function isEarHashed(ear, minX, minY, invSize) {
+    const a = ear.prev, b = ear, c = ear.next;
+    if (area(a, b, c) >= 0) return false;
+    const ax = a.x, bx = b.x, cx = c.x, ay = a.y, by = b.y, cy = c.y;
+    const x0 = Math.min(ax, bx, cx), y0 = Math.min(ay, by, cy), x1 = Math.max(ax, bx, cx), y1 = Math.max(ay, by, cy);
+    const minZ = zOrder(x0, y0, minX, minY, invSize), maxZ = zOrder(x1, y1, minX, minY, invSize);
+    let p = ear.prevZ, n = ear.nextZ;
+    while (p && p.z >= minZ && n && n.z <= maxZ) {
+      if (p.x >= x0 && p.x <= x1 && p.y >= y0 && p.y <= y1 && p !== a && p !== c && pointInTriangleExceptFirst(ax, ay, bx, by, cx, cy, p.x, p.y) && area(p.prev, p, p.next) >= 0) return false;
+      p = p.prevZ;
+      if (n.x >= x0 && n.x <= x1 && n.y >= y0 && n.y <= y1 && n !== a && n !== c && pointInTriangleExceptFirst(ax, ay, bx, by, cx, cy, n.x, n.y) && area(n.prev, n, n.next) >= 0) return false;
+      n = n.nextZ;
+    }
+    while (p && p.z >= minZ) {
+      if (p.x >= x0 && p.x <= x1 && p.y >= y0 && p.y <= y1 && p !== a && p !== c && pointInTriangleExceptFirst(ax, ay, bx, by, cx, cy, p.x, p.y) && area(p.prev, p, p.next) >= 0) return false;
+      p = p.prevZ;
+    }
+    while (n && n.z <= maxZ) {
+      if (n.x >= x0 && n.x <= x1 && n.y >= y0 && n.y <= y1 && n !== a && n !== c && pointInTriangleExceptFirst(ax, ay, bx, by, cx, cy, n.x, n.y) && area(n.prev, n, n.next) >= 0) return false;
+      n = n.nextZ;
+    }
+    return true;
+  }
+  function cureLocalIntersections(start, triangles) {
+    let p = start;
+    do {
+      const a = p.prev, b = p.next.next;
+      if (!equals(a, b) && intersects(a, p, p.next, b) && locallyInside(a, b) && locallyInside(b, a)) {
+        triangles.push(a.i, p.i, b.i);
+        removeNode(p);
+        removeNode(p.next);
+        p = start = b;
+      }
+      p = p.next;
+    } while (p !== start);
+    return filterPoints(p);
+  }
+  function splitEarcut(start, triangles, dim, minX, minY, invSize) {
+    let a = start;
+    do {
+      let b = a.next.next;
+      while (b !== a.prev) {
+        if (a.i !== b.i && isValidDiagonal(a, b)) {
+          let c = splitPolygon(a, b);
+          a = filterPoints(a, a.next);
+          c = filterPoints(c, c.next);
+          earcutLinked(a, triangles, dim, minX, minY, invSize, 0);
+          earcutLinked(c, triangles, dim, minX, minY, invSize, 0);
+          return;
+        }
+        b = b.next;
+      }
+      a = a.next;
+    } while (a !== start);
+  }
+  function eliminateHoles(data, holeIndices, outerNode, dim) {
+    const queue = [];
+    for (let i = 0, len = holeIndices.length; i < len; i++) {
+      const start = holeIndices[i] * dim;
+      const end = i < len - 1 ? holeIndices[i + 1] * dim : data.length;
+      const list = linkedList(data, start, end, dim, false);
+      if (list === list.next) list.steiner = true;
+      queue.push(getLeftmost(list));
+    }
+    queue.sort(compareXYSlope);
+    for (let i = 0; i < queue.length; i++) {
+      outerNode = eliminateHole(queue[i], outerNode);
+    }
+    return outerNode;
+  }
+  function compareXYSlope(a, b) {
+    let result = a.x - b.x;
+    if (result === 0) {
+      result = a.y - b.y;
+      if (result === 0) {
+        const aSlope = (a.next.y - a.y) / (a.next.x - a.x);
+        const bSlope = (b.next.y - b.y) / (b.next.x - b.x);
+        result = aSlope - bSlope;
+      }
+    }
+    return result;
+  }
+  function eliminateHole(hole, outerNode) {
+    const bridge = findHoleBridge(hole, outerNode);
+    if (!bridge) {
+      return outerNode;
+    }
+    const bridgeReverse = splitPolygon(bridge, hole);
+    filterPoints(bridgeReverse, bridgeReverse.next);
+    return filterPoints(bridge, bridge.next);
+  }
+  function findHoleBridge(hole, outerNode) {
+    let p = outerNode;
+    const hx = hole.x;
+    const hy = hole.y;
+    let qx = -Infinity;
+    let m;
+    if (equals(hole, p)) return p;
+    do {
+      if (equals(hole, p.next)) return p.next;
+      else if (hy <= p.y && hy >= p.next.y && p.next.y !== p.y) {
+        const x = p.x + (hy - p.y) * (p.next.x - p.x) / (p.next.y - p.y);
+        if (x <= hx && x > qx) {
+          qx = x;
+          m = p.x < p.next.x ? p : p.next;
+          if (x === hx) return m;
+        }
+      }
+      p = p.next;
+    } while (p !== outerNode);
+    if (!m) return null;
+    const stop = m;
+    const mx = m.x;
+    const my = m.y;
+    let tanMin = Infinity;
+    p = m;
+    do {
+      if (hx >= p.x && p.x >= mx && hx !== p.x && pointInTriangle(hy < my ? hx : qx, hy, mx, my, hy < my ? qx : hx, hy, p.x, p.y)) {
+        const tan = Math.abs(hy - p.y) / (hx - p.x);
+        if (locallyInside(p, hole) && (tan < tanMin || tan === tanMin && (p.x > m.x || p.x === m.x && sectorContainsSector(m, p)))) {
+          m = p;
+          tanMin = tan;
+        }
+      }
+      p = p.next;
+    } while (p !== stop);
+    return m;
+  }
+  function sectorContainsSector(m, p) {
+    return area(m.prev, m, p.prev) < 0 && area(p.next, m, m.next) < 0;
+  }
+  function indexCurve(start, minX, minY, invSize) {
+    let p = start;
+    do {
+      if (p.z === 0) p.z = zOrder(p.x, p.y, minX, minY, invSize);
+      p.prevZ = p.prev;
+      p.nextZ = p.next;
+      p = p.next;
+    } while (p !== start);
+    p.prevZ.nextZ = null;
+    p.prevZ = null;
+    sortLinked(p);
+  }
+  function sortLinked(list) {
+    let numMerges;
+    let inSize = 1;
+    do {
+      let p = list;
+      let e;
+      list = null;
+      let tail = null;
+      numMerges = 0;
+      while (p) {
+        numMerges++;
+        let q = p;
+        let pSize = 0;
+        for (let i = 0; i < inSize; i++) {
+          pSize++;
+          q = q.nextZ;
+          if (!q) break;
+        }
+        let qSize = inSize;
+        while (pSize > 0 || qSize > 0 && q) {
+          if (pSize !== 0 && (qSize === 0 || !q || p.z <= q.z)) {
+            e = p;
+            p = p.nextZ;
+            pSize--;
+          } else {
+            e = q;
+            q = q.nextZ;
+            qSize--;
+          }
+          if (tail) tail.nextZ = e;
+          else list = e;
+          e.prevZ = tail;
+          tail = e;
+        }
+        p = q;
+      }
+      tail.nextZ = null;
+      inSize *= 2;
+    } while (numMerges > 1);
+    return list;
+  }
+  function zOrder(x, y, minX, minY, invSize) {
+    x = (x - minX) * invSize | 0;
+    y = (y - minY) * invSize | 0;
+    x = (x | x << 8) & 16711935;
+    x = (x | x << 4) & 252645135;
+    x = (x | x << 2) & 858993459;
+    x = (x | x << 1) & 1431655765;
+    y = (y | y << 8) & 16711935;
+    y = (y | y << 4) & 252645135;
+    y = (y | y << 2) & 858993459;
+    y = (y | y << 1) & 1431655765;
+    return x | y << 1;
+  }
+  function getLeftmost(start) {
+    let p = start, leftmost = start;
+    do {
+      if (p.x < leftmost.x || p.x === leftmost.x && p.y < leftmost.y) leftmost = p;
+      p = p.next;
+    } while (p !== start);
+    return leftmost;
+  }
+  function pointInTriangle(ax, ay, bx, by, cx, cy, px2, py2) {
+    return (cx - px2) * (ay - py2) >= (ax - px2) * (cy - py2) && (ax - px2) * (by - py2) >= (bx - px2) * (ay - py2) && (bx - px2) * (cy - py2) >= (cx - px2) * (by - py2);
+  }
+  function pointInTriangleExceptFirst(ax, ay, bx, by, cx, cy, px2, py2) {
+    return !(ax === px2 && ay === py2) && pointInTriangle(ax, ay, bx, by, cx, cy, px2, py2);
+  }
+  function isValidDiagonal(a, b) {
+    return a.next.i !== b.i && a.prev.i !== b.i && !intersectsPolygon(a, b) && // doesn't intersect other edges
+    (locallyInside(a, b) && locallyInside(b, a) && middleInside(a, b) && // locally visible
+    (area(a.prev, a, b.prev) || area(a, b.prev, b)) || // does not create opposite-facing sectors
+    equals(a, b) && area(a.prev, a, a.next) > 0 && area(b.prev, b, b.next) > 0);
+  }
+  function area(p, q, r) {
+    return (q.y - p.y) * (r.x - q.x) - (q.x - p.x) * (r.y - q.y);
+  }
+  function equals(p1, p2) {
+    return p1.x === p2.x && p1.y === p2.y;
+  }
+  function intersects(p1, q1, p2, q2) {
+    const o1 = sign(area(p1, q1, p2));
+    const o2 = sign(area(p1, q1, q2));
+    const o3 = sign(area(p2, q2, p1));
+    const o4 = sign(area(p2, q2, q1));
+    if (o1 !== o2 && o3 !== o4) return true;
+    if (o1 === 0 && onSegment(p1, p2, q1)) return true;
+    if (o2 === 0 && onSegment(p1, q2, q1)) return true;
+    if (o3 === 0 && onSegment(p2, p1, q2)) return true;
+    if (o4 === 0 && onSegment(p2, q1, q2)) return true;
+    return false;
+  }
+  function onSegment(p, q, r) {
+    return q.x <= Math.max(p.x, r.x) && q.x >= Math.min(p.x, r.x) && q.y <= Math.max(p.y, r.y) && q.y >= Math.min(p.y, r.y);
+  }
+  function sign(num) {
+    return num > 0 ? 1 : num < 0 ? -1 : 0;
+  }
+  function intersectsPolygon(a, b) {
+    let p = a;
+    do {
+      if (p.i !== a.i && p.next.i !== a.i && p.i !== b.i && p.next.i !== b.i && intersects(p, p.next, a, b)) return true;
+      p = p.next;
+    } while (p !== a);
+    return false;
+  }
+  function locallyInside(a, b) {
+    return area(a.prev, a, a.next) < 0 ? area(a, b, a.next) >= 0 && area(a, a.prev, b) >= 0 : area(a, b, a.prev) < 0 || area(a, a.next, b) < 0;
+  }
+  function middleInside(a, b) {
+    let p = a;
+    let inside = false;
+    const px2 = (a.x + b.x) / 2;
+    const py2 = (a.y + b.y) / 2;
+    do {
+      if (p.y > py2 !== p.next.y > py2 && p.next.y !== p.y && px2 < (p.next.x - p.x) * (py2 - p.y) / (p.next.y - p.y) + p.x)
+        inside = !inside;
+      p = p.next;
+    } while (p !== a);
+    return inside;
+  }
+  function splitPolygon(a, b) {
+    const a2 = createNode(a.i, a.x, a.y), b2 = createNode(b.i, b.x, b.y), an = a.next, bp = b.prev;
+    a.next = b;
+    b.prev = a;
+    a2.next = an;
+    an.prev = a2;
+    b2.next = a2;
+    a2.prev = b2;
+    bp.next = b2;
+    b2.prev = bp;
+    return b2;
+  }
+  function insertNode(i, x, y, last) {
+    const p = createNode(i, x, y);
+    if (!last) {
+      p.prev = p;
+      p.next = p;
+    } else {
+      p.next = last.next;
+      p.prev = last;
+      last.next.prev = p;
+      last.next = p;
+    }
+    return p;
+  }
+  function removeNode(p) {
+    p.next.prev = p.prev;
+    p.prev.next = p.next;
+    if (p.prevZ) p.prevZ.nextZ = p.nextZ;
+    if (p.nextZ) p.nextZ.prevZ = p.prevZ;
+  }
+  function createNode(i, x, y) {
+    return {
+      i,
+      // vertex index in coordinates array
+      x,
+      y,
+      // vertex coordinates
+      prev: null,
+      // previous and next vertex nodes in a polygon ring
+      next: null,
+      z: 0,
+      // z-order curve value
+      prevZ: null,
+      // previous and next nodes in z-order
+      nextZ: null,
+      steiner: false
+      // indicates whether this is a steiner point
+    };
+  }
+  function signedArea(data, start, end, dim) {
+    let sum = 0;
+    for (let i = start, j = end - dim; i < end; i += dim) {
+      sum += (data[j] - data[i]) * (data[i + 1] + data[j + 1]);
+      j = i;
+    }
+    return sum;
+  }
+  var Earcut = class {
+    /**
+     * Triangulates the given shape definition by returning an array of triangles.
+     *
+     * @param {Array<number>} data - An array with 2D points.
+     * @param {Array<number>} holeIndices - An array with indices defining holes.
+     * @param {number} [dim=2] - The number of coordinates per vertex in the input array.
+     * @return {Array<number>} An array representing the triangulated faces. Each face is defined by three consecutive numbers
+     * representing vertex indices.
+     */
+    static triangulate(data, holeIndices, dim = 2) {
+      return earcut(data, holeIndices, dim);
+    }
+  };
+  var ShapeUtils = class _ShapeUtils {
+    /**
+     * Calculate area of a ( 2D ) contour polygon.
+     *
+     * @param {Array<Vector2>} contour - An array of 2D points.
+     * @return {number} The area.
+     */
+    static area(contour) {
+      const n = contour.length;
+      let a = 0;
+      for (let p = n - 1, q = 0; q < n; p = q++) {
+        a += contour[p].x * contour[q].y - contour[q].x * contour[p].y;
+      }
+      return a * 0.5;
+    }
+    /**
+     * Returns `true` if the given contour uses a clockwise winding order.
+     *
+     * @param {Array<Vector2>} pts - An array of 2D points defining a polygon.
+     * @return {boolean} Whether the given contour uses a clockwise winding order or not.
+     */
+    static isClockWise(pts) {
+      return _ShapeUtils.area(pts) < 0;
+    }
+    /**
+     * Triangulates the given shape definition.
+     *
+     * @param {Array<Vector2>} contour - An array of 2D points defining the contour.
+     * @param {Array<Array<Vector2>>} holes - An array that holds arrays of 2D points defining the holes.
+     * @return {Array<Array<number>>} An array that holds for each face definition an array with three indices.
+     */
+    static triangulateShape(contour, holes) {
+      const vertices = [];
+      const holeIndices = [];
+      const faces = [];
+      removeDupEndPts(contour);
+      addContour(vertices, contour);
+      let holeIndex = contour.length;
+      holes.forEach(removeDupEndPts);
+      for (let i = 0; i < holes.length; i++) {
+        holeIndices.push(holeIndex);
+        holeIndex += holes[i].length;
+        addContour(vertices, holes[i]);
+      }
+      const triangles = Earcut.triangulate(vertices, holeIndices);
+      for (let i = 0; i < triangles.length; i += 3) {
+        faces.push(triangles.slice(i, i + 3));
+      }
+      return faces;
+    }
+  };
+  function removeDupEndPts(points) {
+    const l = points.length;
+    if (l > 2 && points[l - 1].equals(points[0])) {
+      points.pop();
+    }
+  }
+  function addContour(vertices, contour) {
+    for (let i = 0; i < contour.length; i++) {
+      vertices.push(contour[i].x);
+      vertices.push(contour[i].y);
+    }
+  }
+  var ExtrudeGeometry = class _ExtrudeGeometry extends BufferGeometry {
+    /**
+     * Constructs a new extrude geometry.
+     *
+     * @param {Shape|Array<Shape>} [shapes] - A shape or an array of shapes.
+     * @param {ExtrudeGeometry~Options} [options] - The extrude settings.
+     */
+    constructor(shapes = new Shape([new Vector2(0.5, 0.5), new Vector2(-0.5, 0.5), new Vector2(-0.5, -0.5), new Vector2(0.5, -0.5)]), options = {}) {
+      super();
+      this.type = "ExtrudeGeometry";
+      this.parameters = {
+        shapes,
+        options
+      };
+      shapes = Array.isArray(shapes) ? shapes : [shapes];
+      const scope = this;
+      const verticesArray = [];
+      const uvArray = [];
+      for (let i = 0, l = shapes.length; i < l; i++) {
+        const shape = shapes[i];
+        addShape(shape);
+      }
+      this.setAttribute("position", new Float32BufferAttribute(verticesArray, 3));
+      this.setAttribute("uv", new Float32BufferAttribute(uvArray, 2));
+      this.computeVertexNormals();
+      function addShape(shape) {
+        const placeholder = [];
+        const curveSegments = options.curveSegments !== void 0 ? options.curveSegments : 12;
+        const steps = options.steps !== void 0 ? options.steps : 1;
+        const depth = options.depth !== void 0 ? options.depth : 1;
+        let bevelEnabled = options.bevelEnabled !== void 0 ? options.bevelEnabled : true;
+        let bevelThickness = options.bevelThickness !== void 0 ? options.bevelThickness : 0.2;
+        let bevelSize = options.bevelSize !== void 0 ? options.bevelSize : bevelThickness - 0.1;
+        let bevelOffset = options.bevelOffset !== void 0 ? options.bevelOffset : 0;
+        let bevelSegments = options.bevelSegments !== void 0 ? options.bevelSegments : 3;
+        const extrudePath = options.extrudePath;
+        const uvgen = options.UVGenerator !== void 0 ? options.UVGenerator : WorldUVGenerator;
+        let extrudePts, extrudeByPath = false;
+        let splineTube, binormal, normal, position2;
+        if (extrudePath) {
+          extrudePts = extrudePath.getSpacedPoints(steps);
+          extrudeByPath = true;
+          bevelEnabled = false;
+          const isClosed = extrudePath.isCatmullRomCurve3 ? extrudePath.closed : false;
+          splineTube = extrudePath.computeFrenetFrames(steps, isClosed);
+          binormal = new Vector3();
+          normal = new Vector3();
+          position2 = new Vector3();
+        }
+        if (!bevelEnabled) {
+          bevelSegments = 0;
+          bevelThickness = 0;
+          bevelSize = 0;
+          bevelOffset = 0;
+        }
+        const shapePoints = shape.extractPoints(curveSegments);
+        let vertices = shapePoints.shape;
+        const holes = shapePoints.holes;
+        const reverse = !ShapeUtils.isClockWise(vertices);
+        if (reverse) {
+          vertices = vertices.reverse();
+          for (let h = 0, hl = holes.length; h < hl; h++) {
+            const ahole = holes[h];
+            if (ShapeUtils.isClockWise(ahole)) {
+              holes[h] = ahole.reverse();
+            }
+          }
+        }
+        function mergeOverlappingPoints(points) {
+          const THRESHOLD = 1e-10;
+          const THRESHOLD_SQ = THRESHOLD * THRESHOLD;
+          let prevPos = points[0];
+          for (let i = 1; i <= points.length; i++) {
+            const currentIndex = i % points.length;
+            const currentPos = points[currentIndex];
+            const dx = currentPos.x - prevPos.x;
+            const dy = currentPos.y - prevPos.y;
+            const distSq = dx * dx + dy * dy;
+            const scalingFactorSqrt = Math.max(
+              Math.abs(currentPos.x),
+              Math.abs(currentPos.y),
+              Math.abs(prevPos.x),
+              Math.abs(prevPos.y)
+            );
+            const thresholdSqScaled = THRESHOLD_SQ * scalingFactorSqrt * scalingFactorSqrt;
+            if (distSq <= thresholdSqScaled) {
+              points.splice(currentIndex, 1);
+              i--;
+              continue;
+            }
+            prevPos = currentPos;
+          }
+        }
+        mergeOverlappingPoints(vertices);
+        holes.forEach(mergeOverlappingPoints);
+        const numHoles = holes.length;
+        const contour = vertices;
+        for (let h = 0; h < numHoles; h++) {
+          const ahole = holes[h];
+          vertices = vertices.concat(ahole);
+        }
+        function scalePt2(pt, vec, size) {
+          if (!vec) error("ExtrudeGeometry: vec does not exist");
+          return pt.clone().addScaledVector(vec, size);
+        }
+        const vlen = vertices.length;
+        function getBevelVec(inPt, inPrev, inNext) {
+          let v_trans_x, v_trans_y, shrink_by;
+          const v_prev_x = inPt.x - inPrev.x, v_prev_y = inPt.y - inPrev.y;
+          const v_next_x = inNext.x - inPt.x, v_next_y = inNext.y - inPt.y;
+          const v_prev_lensq = v_prev_x * v_prev_x + v_prev_y * v_prev_y;
+          const collinear0 = v_prev_x * v_next_y - v_prev_y * v_next_x;
+          if (Math.abs(collinear0) > Number.EPSILON) {
+            const v_prev_len = Math.sqrt(v_prev_lensq);
+            const v_next_len = Math.sqrt(v_next_x * v_next_x + v_next_y * v_next_y);
+            const ptPrevShift_x = inPrev.x - v_prev_y / v_prev_len;
+            const ptPrevShift_y = inPrev.y + v_prev_x / v_prev_len;
+            const ptNextShift_x = inNext.x - v_next_y / v_next_len;
+            const ptNextShift_y = inNext.y + v_next_x / v_next_len;
+            const sf = ((ptNextShift_x - ptPrevShift_x) * v_next_y - (ptNextShift_y - ptPrevShift_y) * v_next_x) / (v_prev_x * v_next_y - v_prev_y * v_next_x);
+            v_trans_x = ptPrevShift_x + v_prev_x * sf - inPt.x;
+            v_trans_y = ptPrevShift_y + v_prev_y * sf - inPt.y;
+            const v_trans_lensq = v_trans_x * v_trans_x + v_trans_y * v_trans_y;
+            if (v_trans_lensq <= 2) {
+              return new Vector2(v_trans_x, v_trans_y);
+            } else {
+              shrink_by = Math.sqrt(v_trans_lensq / 2);
+            }
+          } else {
+            let direction_eq = false;
+            if (v_prev_x > Number.EPSILON) {
+              if (v_next_x > Number.EPSILON) {
+                direction_eq = true;
+              }
+            } else {
+              if (v_prev_x < -Number.EPSILON) {
+                if (v_next_x < -Number.EPSILON) {
+                  direction_eq = true;
+                }
+              } else {
+                if (Math.sign(v_prev_y) === Math.sign(v_next_y)) {
+                  direction_eq = true;
+                }
+              }
+            }
+            if (direction_eq) {
+              v_trans_x = -v_prev_y;
+              v_trans_y = v_prev_x;
+              shrink_by = Math.sqrt(v_prev_lensq);
+            } else {
+              v_trans_x = v_prev_x;
+              v_trans_y = v_prev_y;
+              shrink_by = Math.sqrt(v_prev_lensq / 2);
+            }
+          }
+          return new Vector2(v_trans_x / shrink_by, v_trans_y / shrink_by);
+        }
+        const contourMovements = [];
+        for (let i = 0, il = contour.length, j = il - 1, k = i + 1; i < il; i++, j++, k++) {
+          if (j === il) j = 0;
+          if (k === il) k = 0;
+          contourMovements[i] = getBevelVec(contour[i], contour[j], contour[k]);
+        }
+        const holesMovements = [];
+        let oneHoleMovements, verticesMovements = contourMovements.concat();
+        for (let h = 0, hl = numHoles; h < hl; h++) {
+          const ahole = holes[h];
+          oneHoleMovements = [];
+          for (let i = 0, il = ahole.length, j = il - 1, k = i + 1; i < il; i++, j++, k++) {
+            if (j === il) j = 0;
+            if (k === il) k = 0;
+            oneHoleMovements[i] = getBevelVec(ahole[i], ahole[j], ahole[k]);
+          }
+          holesMovements.push(oneHoleMovements);
+          verticesMovements = verticesMovements.concat(oneHoleMovements);
+        }
+        let faces;
+        if (bevelSegments === 0) {
+          faces = ShapeUtils.triangulateShape(contour, holes);
+        } else {
+          const contractedContourVertices = [];
+          const expandedHoleVertices = [];
+          for (let b = 0; b < bevelSegments; b++) {
+            const t = b / bevelSegments;
+            const z = bevelThickness * Math.cos(t * Math.PI / 2);
+            const bs2 = bevelSize * Math.sin(t * Math.PI / 2) + bevelOffset;
+            for (let i = 0, il = contour.length; i < il; i++) {
+              const vert = scalePt2(contour[i], contourMovements[i], bs2);
+              v(vert.x, vert.y, -z);
+              if (t === 0) contractedContourVertices.push(vert);
+            }
+            for (let h = 0, hl = numHoles; h < hl; h++) {
+              const ahole = holes[h];
+              oneHoleMovements = holesMovements[h];
+              const oneHoleVertices = [];
+              for (let i = 0, il = ahole.length; i < il; i++) {
+                const vert = scalePt2(ahole[i], oneHoleMovements[i], bs2);
+                v(vert.x, vert.y, -z);
+                if (t === 0) oneHoleVertices.push(vert);
+              }
+              if (t === 0) expandedHoleVertices.push(oneHoleVertices);
+            }
+          }
+          faces = ShapeUtils.triangulateShape(contractedContourVertices, expandedHoleVertices);
+        }
+        const flen = faces.length;
+        const bs = bevelSize + bevelOffset;
+        for (let i = 0; i < vlen; i++) {
+          const vert = bevelEnabled ? scalePt2(vertices[i], verticesMovements[i], bs) : vertices[i];
+          if (!extrudeByPath) {
+            v(vert.x, vert.y, 0);
+          } else {
+            normal.copy(splineTube.normals[0]).multiplyScalar(vert.x);
+            binormal.copy(splineTube.binormals[0]).multiplyScalar(vert.y);
+            position2.copy(extrudePts[0]).add(normal).add(binormal);
+            v(position2.x, position2.y, position2.z);
+          }
+        }
+        for (let s = 1; s <= steps; s++) {
+          for (let i = 0; i < vlen; i++) {
+            const vert = bevelEnabled ? scalePt2(vertices[i], verticesMovements[i], bs) : vertices[i];
+            if (!extrudeByPath) {
+              v(vert.x, vert.y, depth / steps * s);
+            } else {
+              normal.copy(splineTube.normals[s]).multiplyScalar(vert.x);
+              binormal.copy(splineTube.binormals[s]).multiplyScalar(vert.y);
+              position2.copy(extrudePts[s]).add(normal).add(binormal);
+              v(position2.x, position2.y, position2.z);
+            }
+          }
+        }
+        for (let b = bevelSegments - 1; b >= 0; b--) {
+          const t = b / bevelSegments;
+          const z = bevelThickness * Math.cos(t * Math.PI / 2);
+          const bs2 = bevelSize * Math.sin(t * Math.PI / 2) + bevelOffset;
+          for (let i = 0, il = contour.length; i < il; i++) {
+            const vert = scalePt2(contour[i], contourMovements[i], bs2);
+            v(vert.x, vert.y, depth + z);
+          }
+          for (let h = 0, hl = holes.length; h < hl; h++) {
+            const ahole = holes[h];
+            oneHoleMovements = holesMovements[h];
+            for (let i = 0, il = ahole.length; i < il; i++) {
+              const vert = scalePt2(ahole[i], oneHoleMovements[i], bs2);
+              if (!extrudeByPath) {
+                v(vert.x, vert.y, depth + z);
+              } else {
+                v(vert.x, vert.y + extrudePts[steps - 1].y, extrudePts[steps - 1].x + z);
+              }
+            }
+          }
+        }
+        buildLidFaces();
+        buildSideFaces();
+        function buildLidFaces() {
+          const start = verticesArray.length / 3;
+          if (bevelEnabled) {
+            let layer = 0;
+            let offset = vlen * layer;
+            for (let i = 0; i < flen; i++) {
+              const face = faces[i];
+              f3(face[2] + offset, face[1] + offset, face[0] + offset);
+            }
+            layer = steps + bevelSegments * 2;
+            offset = vlen * layer;
+            for (let i = 0; i < flen; i++) {
+              const face = faces[i];
+              f3(face[0] + offset, face[1] + offset, face[2] + offset);
+            }
+          } else {
+            for (let i = 0; i < flen; i++) {
+              const face = faces[i];
+              f3(face[2], face[1], face[0]);
+            }
+            for (let i = 0; i < flen; i++) {
+              const face = faces[i];
+              f3(face[0] + vlen * steps, face[1] + vlen * steps, face[2] + vlen * steps);
+            }
+          }
+          scope.addGroup(start, verticesArray.length / 3 - start, 0);
+        }
+        function buildSideFaces() {
+          const start = verticesArray.length / 3;
+          let layeroffset = 0;
+          sidewalls(contour, layeroffset);
+          layeroffset += contour.length;
+          for (let h = 0, hl = holes.length; h < hl; h++) {
+            const ahole = holes[h];
+            sidewalls(ahole, layeroffset);
+            layeroffset += ahole.length;
+          }
+          scope.addGroup(start, verticesArray.length / 3 - start, 1);
+        }
+        function sidewalls(contour2, layeroffset) {
+          let i = contour2.length;
+          while (--i >= 0) {
+            const j = i;
+            let k = i - 1;
+            if (k < 0) k = contour2.length - 1;
+            for (let s = 0, sl = steps + bevelSegments * 2; s < sl; s++) {
+              const slen1 = vlen * s;
+              const slen2 = vlen * (s + 1);
+              const a = layeroffset + j + slen1, b = layeroffset + k + slen1, c = layeroffset + k + slen2, d = layeroffset + j + slen2;
+              f4(a, b, c, d);
+            }
+          }
+        }
+        function v(x, y, z) {
+          placeholder.push(x);
+          placeholder.push(y);
+          placeholder.push(z);
+        }
+        function f3(a, b, c) {
+          addVertex(a);
+          addVertex(b);
+          addVertex(c);
+          const nextIndex = verticesArray.length / 3;
+          const uvs = uvgen.generateTopUV(scope, verticesArray, nextIndex - 3, nextIndex - 2, nextIndex - 1);
+          addUV(uvs[0]);
+          addUV(uvs[1]);
+          addUV(uvs[2]);
+        }
+        function f4(a, b, c, d) {
+          addVertex(a);
+          addVertex(b);
+          addVertex(d);
+          addVertex(b);
+          addVertex(c);
+          addVertex(d);
+          const nextIndex = verticesArray.length / 3;
+          const uvs = uvgen.generateSideWallUV(scope, verticesArray, nextIndex - 6, nextIndex - 3, nextIndex - 2, nextIndex - 1);
+          addUV(uvs[0]);
+          addUV(uvs[1]);
+          addUV(uvs[3]);
+          addUV(uvs[1]);
+          addUV(uvs[2]);
+          addUV(uvs[3]);
+        }
+        function addVertex(index) {
+          verticesArray.push(placeholder[index * 3 + 0]);
+          verticesArray.push(placeholder[index * 3 + 1]);
+          verticesArray.push(placeholder[index * 3 + 2]);
+        }
+        function addUV(vector2) {
+          uvArray.push(vector2.x);
+          uvArray.push(vector2.y);
+        }
+      }
+    }
+    copy(source) {
+      super.copy(source);
+      this.parameters = Object.assign({}, source.parameters);
+      return this;
+    }
+    toJSON() {
+      const data = super.toJSON();
+      const shapes = this.parameters.shapes;
+      const options = this.parameters.options;
+      return toJSON$1(shapes, options, data);
+    }
+    /**
+     * Factory method for creating an instance of this class from the given
+     * JSON object.
+     *
+     * @param {Object} data - A JSON object representing the serialized geometry.
+     * @param {Array<Shape>} shapes - An array of shapes.
+     * @return {ExtrudeGeometry} A new instance.
+     */
+    static fromJSON(data, shapes) {
+      const geometryShapes = [];
+      for (let j = 0, jl = data.shapes.length; j < jl; j++) {
+        const shape = shapes[data.shapes[j]];
+        geometryShapes.push(shape);
+      }
+      const extrudePath = data.options.extrudePath;
+      if (extrudePath !== void 0) {
+        data.options.extrudePath = new Curves[extrudePath.type]().fromJSON(extrudePath);
+      }
+      return new _ExtrudeGeometry(geometryShapes, data.options);
+    }
+  };
+  var WorldUVGenerator = {
+    generateTopUV: function(geometry, vertices, indexA, indexB, indexC) {
+      const a_x = vertices[indexA * 3];
+      const a_y = vertices[indexA * 3 + 1];
+      const b_x = vertices[indexB * 3];
+      const b_y = vertices[indexB * 3 + 1];
+      const c_x = vertices[indexC * 3];
+      const c_y = vertices[indexC * 3 + 1];
+      return [
+        new Vector2(a_x, a_y),
+        new Vector2(b_x, b_y),
+        new Vector2(c_x, c_y)
+      ];
+    },
+    generateSideWallUV: function(geometry, vertices, indexA, indexB, indexC, indexD) {
+      const a_x = vertices[indexA * 3];
+      const a_y = vertices[indexA * 3 + 1];
+      const a_z = vertices[indexA * 3 + 2];
+      const b_x = vertices[indexB * 3];
+      const b_y = vertices[indexB * 3 + 1];
+      const b_z = vertices[indexB * 3 + 2];
+      const c_x = vertices[indexC * 3];
+      const c_y = vertices[indexC * 3 + 1];
+      const c_z = vertices[indexC * 3 + 2];
+      const d_x = vertices[indexD * 3];
+      const d_y = vertices[indexD * 3 + 1];
+      const d_z = vertices[indexD * 3 + 2];
+      if (Math.abs(a_y - b_y) < Math.abs(a_x - b_x)) {
+        return [
+          new Vector2(a_x, 1 - a_z),
+          new Vector2(b_x, 1 - b_z),
+          new Vector2(c_x, 1 - c_z),
+          new Vector2(d_x, 1 - d_z)
+        ];
+      } else {
+        return [
+          new Vector2(a_y, 1 - a_z),
+          new Vector2(b_y, 1 - b_z),
+          new Vector2(c_y, 1 - c_z),
+          new Vector2(d_y, 1 - d_z)
+        ];
+      }
+    }
+  };
+  function toJSON$1(shapes, options, data) {
+    data.shapes = [];
+    if (Array.isArray(shapes)) {
+      for (let i = 0, l = shapes.length; i < l; i++) {
+        const shape = shapes[i];
+        data.shapes.push(shape.uuid);
+      }
+    } else {
+      data.shapes.push(shapes.uuid);
+    }
+    data.options = Object.assign({}, options);
+    if (options.extrudePath !== void 0) data.options.extrudePath = options.extrudePath.toJSON();
+    return data;
+  }
+  var IcosahedronGeometry = class _IcosahedronGeometry extends PolyhedronGeometry {
+    /**
+     * Constructs a new icosahedron geometry.
+     *
+     * @param {number} [radius=1] - Radius of the icosahedron.
+     * @param {number} [detail=0] - Setting this to a value greater than `0` adds vertices making it no longer a icosahedron.
+     */
+    constructor(radius = 1, detail = 0) {
+      const t = (1 + Math.sqrt(5)) / 2;
+      const vertices = [
+        -1,
+        t,
+        0,
+        1,
+        t,
+        0,
+        -1,
+        -t,
+        0,
+        1,
+        -t,
+        0,
+        0,
+        -1,
+        t,
+        0,
+        1,
+        t,
+        0,
+        -1,
+        -t,
+        0,
+        1,
+        -t,
+        t,
+        0,
+        -1,
+        t,
+        0,
+        1,
+        -t,
+        0,
+        -1,
+        -t,
+        0,
+        1
+      ];
+      const indices = [
+        0,
+        11,
+        5,
+        0,
+        5,
+        1,
+        0,
+        1,
+        7,
+        0,
+        7,
+        10,
+        0,
+        10,
+        11,
+        1,
+        5,
+        9,
+        5,
+        11,
+        4,
+        11,
+        10,
+        2,
+        10,
+        7,
+        6,
+        7,
+        1,
+        8,
+        3,
+        9,
+        4,
+        3,
+        4,
+        2,
+        3,
+        2,
+        6,
+        3,
+        6,
+        8,
+        3,
+        8,
+        9,
+        4,
+        9,
+        5,
+        2,
+        4,
+        11,
+        6,
+        2,
+        10,
+        8,
+        6,
+        7,
+        9,
+        8,
+        1
+      ];
+      super(vertices, indices, radius, detail);
+      this.type = "IcosahedronGeometry";
+      this.parameters = {
+        radius,
+        detail
+      };
+    }
+    /**
+     * Factory method for creating an instance of this class from the given
+     * JSON object.
+     *
+     * @param {Object} data - A JSON object representing the serialized geometry.
+     * @return {IcosahedronGeometry} A new instance.
+     */
+    static fromJSON(data) {
+      return new _IcosahedronGeometry(data.radius, data.detail);
+    }
+  };
+  var OctahedronGeometry = class _OctahedronGeometry extends PolyhedronGeometry {
+    /**
+     * Constructs a new octahedron geometry.
+     *
+     * @param {number} [radius=1] - Radius of the octahedron.
+     * @param {number} [detail=0] - Setting this to a value greater than `0` adds vertices making it no longer a octahedron.
+     */
+    constructor(radius = 1, detail = 0) {
+      const vertices = [
+        1,
+        0,
+        0,
+        -1,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        -1,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        -1
+      ];
+      const indices = [
+        0,
+        2,
+        4,
+        0,
+        4,
+        3,
+        0,
+        3,
+        5,
+        0,
+        5,
+        2,
+        1,
+        2,
+        5,
+        1,
+        5,
+        3,
+        1,
+        3,
+        4,
+        1,
+        4,
+        2
+      ];
+      super(vertices, indices, radius, detail);
+      this.type = "OctahedronGeometry";
+      this.parameters = {
+        radius,
+        detail
+      };
+    }
+    /**
+     * Factory method for creating an instance of this class from the given
+     * JSON object.
+     *
+     * @param {Object} data - A JSON object representing the serialized geometry.
+     * @return {OctahedronGeometry} A new instance.
+     */
+    static fromJSON(data) {
+      return new _OctahedronGeometry(data.radius, data.detail);
     }
   };
   var PlaneGeometry = class _PlaneGeometry extends BufferGeometry {
@@ -15389,6 +18955,60 @@
      */
     static fromJSON(data) {
       return new _SphereGeometry(data.radius, data.widthSegments, data.heightSegments, data.phiStart, data.phiLength, data.thetaStart, data.thetaLength);
+    }
+  };
+  var TetrahedronGeometry = class _TetrahedronGeometry extends PolyhedronGeometry {
+    /**
+     * Constructs a new tetrahedron geometry.
+     *
+     * @param {number} [radius=1] - Radius of the tetrahedron.
+     * @param {number} [detail=0] - Setting this to a value greater than `0` adds vertices making it no longer a tetrahedron.
+     */
+    constructor(radius = 1, detail = 0) {
+      const vertices = [
+        1,
+        1,
+        1,
+        -1,
+        -1,
+        1,
+        -1,
+        1,
+        -1,
+        1,
+        -1,
+        -1
+      ];
+      const indices = [
+        2,
+        1,
+        0,
+        0,
+        3,
+        2,
+        1,
+        3,
+        0,
+        2,
+        3,
+        1
+      ];
+      super(vertices, indices, radius, detail);
+      this.type = "TetrahedronGeometry";
+      this.parameters = {
+        radius,
+        detail
+      };
+    }
+    /**
+     * Factory method for creating an instance of this class from the given
+     * JSON object.
+     *
+     * @param {Object} data - A JSON object representing the serialized geometry.
+     * @return {TetrahedronGeometry} A new instance.
+     */
+    static fromJSON(data) {
+      return new _TetrahedronGeometry(data.radius, data.detail);
     }
   };
   var TorusGeometry = class _TorusGeometry extends BufferGeometry {
@@ -15580,9 +19200,9 @@
   function mergeUniforms(uniforms) {
     const merged = {};
     for (let u = 0; u < uniforms.length; u++) {
-      const tmp = cloneUniforms(uniforms[u]);
-      for (const p in tmp) {
-        merged[p] = tmp[p];
+      const tmp3 = cloneUniforms(uniforms[u]);
+      for (const p in tmp3) {
+        merged[p] = tmp3[p];
       }
     }
     return merged;
@@ -30214,6 +33834,64 @@ void main() {
           );
           break;
         }
+        case "spherical_cap": {
+          const R = threeData.radius || 6;
+          const h = threeData.height || 3;
+          const maxDim = Math.max(R * 2, h) || 1;
+          const scale = norm * 1.8 / maxDim;
+          const ratio = Math.max(-1, Math.min(1, (R - h) / R));
+          const thetaMax = Math.acos(ratio);
+          geometry = new SphereGeometry(R * scale, 36, 18, 0, Math.PI * 2, 0, thetaMax);
+          break;
+        }
+        case "hollow_cylinder": {
+          const Rout = threeData.outerRadius || 5;
+          const Rin = Math.min(threeData.innerRadius || 3, Rout * 0.95);
+          const H = threeData.height || 10;
+          const maxDim = Math.max(Rout * 2, H) || 1;
+          const scale = norm * 1.8 / maxDim;
+          const shape = new Shape();
+          shape.absarc(0, 0, Rout * scale, 0, Math.PI * 2, false);
+          const holePath = new Path();
+          holePath.absarc(0, 0, Rin * scale, 0, Math.PI * 2, true);
+          shape.holes.push(holePath);
+          geometry = new ExtrudeGeometry(shape, {
+            depth: H * scale,
+            bevelEnabled: false,
+            curveSegments: 36
+          });
+          geometry.center();
+          geometry.rotateX(Math.PI / 2);
+          break;
+        }
+        case "tetrahedron": {
+          const edge = threeData.edge || 6;
+          const circumR = edge * Math.sqrt(6) / 4;
+          const scale = norm * 1.6 / (circumR * 2);
+          geometry = new TetrahedronGeometry(circumR * scale);
+          break;
+        }
+        case "octahedron": {
+          const edge = threeData.edge || 5;
+          const circumR = edge / Math.SQRT2;
+          const scale = norm * 1.6 / (circumR * 2);
+          geometry = new OctahedronGeometry(circumR * scale);
+          break;
+        }
+        case "icosahedron": {
+          const edge = threeData.edge || 4;
+          const circumR = edge / 4 * Math.sqrt(10 + 2 * Math.sqrt(5));
+          const scale = norm * 1.6 / (circumR * 2);
+          geometry = new IcosahedronGeometry(circumR * scale);
+          break;
+        }
+        case "dodecahedron": {
+          const edge = threeData.edge || 4;
+          const circumR = edge / 4 * (Math.sqrt(3) + Math.sqrt(15));
+          const scale = norm * 1.6 / (circumR * 2);
+          geometry = new DodecahedronGeometry(circumR * scale);
+          break;
+        }
         default:
           geometry = new SphereGeometry(norm, 32, 24);
       }
@@ -30221,7 +33899,8 @@ void main() {
       solidMesh.castShadow = true;
       solidMesh.receiveShadow = true;
       this.currentMeshGroup.add(solidMesh);
-      const isPoly = threeData.type === "cube" || threeData.type === "cuboid" || threeData.type === "pyramid" || threeData.type === "prism";
+      const polyTypes = ["cube", "cuboid", "pyramid", "prism", "tetrahedron", "octahedron", "icosahedron", "dodecahedron"];
+      const isPoly = polyTypes.includes(threeData.type);
       const wireGeom = isPoly ? new EdgesGeometry(geometry, 15) : new WireframeGeometry(geometry);
       const wireMat = new LineBasicMaterial({
         color: 6344191,
@@ -30362,11 +34041,16 @@ void main() {
 
 `;
         entry.steps.forEach((step, idx) => {
+          const cleanSubst = (step.substitution || "").replace(/(\d+\.\d+)/g, (match) => {
+            const num = parseFloat(match);
+            if (isNaN(num)) return match;
+            return (Math.round(num * 1e4) / 1e4).toString();
+          });
           md += `### ${idx + 1}. ${step.title}
 `;
           md += `- Formula: \`${step.formula}\`
 `;
-          md += `- Substitution: ${step.substitution}
+          md += `- Substitution: ${cleanSubst}
 
 `;
         });
@@ -30376,6 +34060,16 @@ void main() {
   };
 
   // src/renderer/js/app.js
+  function formatDerivationNumbers(text, precision = 4) {
+    if (!text) return "";
+    return text.replace(/(\d+\.\d+)/g, (match) => {
+      const num = parseFloat(match);
+      if (isNaN(num)) return match;
+      const factor = Math.pow(10, precision);
+      const rounded = Math.round(num * factor) / factor;
+      return rounded.toString();
+    });
+  }
   var App = class {
     constructor() {
       this.currentMode = "2d";
@@ -30410,10 +34104,45 @@ void main() {
       const minBtn = document.getElementById("btn-minimize");
       const maxBtn = document.getElementById("btn-maximize");
       const closeBtn = document.getElementById("btn-close");
+      const titlebar = document.getElementById("titlebar");
+      const updateMaxBtnIcon = (isMaximized) => {
+        if (!maxBtn) return;
+        if (isMaximized) {
+          maxBtn.title = "Restore";
+          maxBtn.setAttribute("aria-label", "Restore");
+          maxBtn.innerHTML = `
+          <svg width="10" height="10" viewBox="0 0 10 10">
+            <path fill="none" stroke="currentColor" stroke-width="1" d="M2.5 1.5h6v6h-2m-5 0h6v-6h-6z M1.5 3.5h5v5h-5z"/>
+          </svg>
+        `;
+        } else {
+          maxBtn.title = "Maximize";
+          maxBtn.setAttribute("aria-label", "Maximize");
+          maxBtn.innerHTML = `
+          <svg width="10" height="10" viewBox="0 0 10 10">
+            <path fill="none" stroke="currentColor" stroke-width="1" d="M.5.5h9v9h-9z"/>
+          </svg>
+        `;
+        }
+      };
       if (window.electronAPI) {
         if (minBtn) minBtn.addEventListener("click", () => window.electronAPI.minimizeWindow());
         if (maxBtn) maxBtn.addEventListener("click", () => window.electronAPI.maximizeWindow());
         if (closeBtn) closeBtn.addEventListener("click", () => window.electronAPI.closeWindow());
+        if (window.electronAPI.onMaximizedChange) {
+          window.electronAPI.onMaximizedChange((isMaximized) => {
+            updateMaxBtnIcon(isMaximized);
+          });
+        }
+        if (window.electronAPI.isMaximized) {
+          window.electronAPI.isMaximized().then((isMax) => updateMaxBtnIcon(isMax));
+        }
+        if (titlebar) {
+          titlebar.addEventListener("dblclick", (e) => {
+            if (e.target.closest(".window-controls")) return;
+            window.electronAPI.maximizeWindow();
+          });
+        }
       }
     }
     setupNavigation() {
@@ -30704,10 +34433,11 @@ void main() {
         result.steps.forEach((step, idx) => {
           const item = document.createElement("div");
           item.className = "step-item";
+          const formattedSubst = formatDerivationNumbers(step.substitution, this.viewUnits.precision);
           item.innerHTML = `
           <div class="step-title">${idx + 1}. ${step.title}</div>
           <div class="step-formula">Formula: ${step.formula}</div>
-          <div class="step-subst">${step.substitution}</div>
+          <div class="step-subst">${formattedSubst}</div>
         `;
           stepsContainer.appendChild(item);
         });
@@ -30715,9 +34445,8 @@ void main() {
     }
     setupVisualizers() {
       const container2D = document.getElementById("visualizer-2d-container");
-      const container3D = document.getElementById("visualizer-3d-container");
       this.visualizer2D = new Visualizer2D(container2D);
-      this.visualizer3D = new Visualizer3D(container3D);
+      this.visualizer3D = null;
       this.updateVisualizerToolbar();
     }
     updateVisualizerToolbar() {
@@ -30731,7 +34460,7 @@ void main() {
         guideBtn.onclick = () => {
           guidesActive = !guidesActive;
           guideBtn.classList.toggle("active", guidesActive);
-          this.visualizer2D.setShowGuides(guidesActive);
+          if (this.visualizer2D) this.visualizer2D.setShowGuides(guidesActive);
         };
         toolbar.appendChild(guideBtn);
       } else {
@@ -30742,7 +34471,7 @@ void main() {
         autoRotBtn.onclick = () => {
           autoRot = !autoRot;
           autoRotBtn.classList.toggle("active", autoRot);
-          this.visualizer3D.setAutoRotate(autoRot);
+          if (this.visualizer3D) this.visualizer3D.setAutoRotate(autoRot);
         };
         toolbar.appendChild(autoRotBtn);
         const wireBtn = document.createElement("button");
@@ -30752,14 +34481,14 @@ void main() {
         wireBtn.onclick = () => {
           wire = !wire;
           wireBtn.classList.toggle("active", wire);
-          this.visualizer3D.setWireframe(wire);
+          if (this.visualizer3D) this.visualizer3D.setWireframe(wire);
         };
         toolbar.appendChild(wireBtn);
         const resetBtn = document.createElement("button");
         resetBtn.className = "fluent-icon-btn";
         resetBtn.innerHTML = `<span>Reset View</span>`;
         resetBtn.onclick = () => {
-          this.visualizer3D.resetView();
+          if (this.visualizer3D) this.visualizer3D.resetView();
         };
         toolbar.appendChild(resetBtn);
       }
@@ -30781,6 +34510,9 @@ void main() {
         if (container2D) container2D.style.display = "none";
         if (container3D) {
           container3D.style.display = "block";
+          if (!this.visualizer3D) {
+            this.visualizer3D = new Visualizer3D(container3D);
+          }
           this.visualizer3D.resize();
           this.visualizer3D.render(result.threeData);
         }
@@ -30907,8 +34639,12 @@ void main() {
             return;
           }
           Store.addHistory({
+            mode: this.currentMode,
+            shapeId: this.latestCalculation.shapeId,
             shapeName: this.latestCalculation.shapeName,
+            methodId: this.latestCalculation.methodId,
             methodName: this.latestCalculation.methodName,
+            rawInputs: JSON.parse(JSON.stringify(this.inputState)),
             inputs: this.latestCalculation.inputs,
             outputs: this.latestCalculation.result.outputs.map((out) => {
               const targetUnitId = out.type === UNIT_TYPES.LENGTH ? this.viewUnits.length : out.type === UNIT_TYPES.AREA ? this.viewUnits.area : out.type === UNIT_TYPES.VOLUME ? this.viewUnits.volume : out.type === UNIT_TYPES.ANGLE ? this.viewUnits.angle : null;
@@ -30934,6 +34670,51 @@ void main() {
         });
       }
     }
+    loadSavedCalculation(item) {
+      if (!item) return;
+      const targetMode = item.mode || (SHAPES_2D.some((s) => s.id === item.shapeId) ? "2d" : "3d");
+      const navItems = document.querySelectorAll(".nav-item");
+      navItems.forEach((n) => {
+        if (n.dataset.tab === targetMode) n.classList.add("active");
+        else n.classList.remove("active");
+      });
+      this.switchView(targetMode);
+      const shape = this.currentShapeList.find((s) => s.id === item.shapeId);
+      if (shape) {
+        this.currentShape = shape;
+        const method = shape.methods.find((m) => m.id === item.methodId) || shape.methods[0];
+        this.currentMethod = method;
+        this.renderShapePills();
+        const pills = document.querySelectorAll(".shape-pill");
+        pills.forEach((p, idx) => {
+          if (this.currentShapeList[idx].id === shape.id) {
+            p.classList.add("active");
+            p.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
+          } else {
+            p.classList.remove("active");
+          }
+        });
+        this.renderShapeView();
+        const methodSelect = document.getElementById("method-select");
+        if (methodSelect) {
+          methodSelect.value = method.id;
+        }
+        if (item.rawInputs) {
+          for (const [inpId, data] of Object.entries(item.rawInputs)) {
+            if (this.inputState[inpId]) {
+              this.inputState[inpId].val = data.val;
+              if (data.unitId) this.inputState[inpId].unitId = data.unitId;
+              const inputEl = document.getElementById(`input-${inpId}`);
+              if (inputEl) inputEl.value = data.val;
+              const unitEl = document.getElementById(`unit-${inpId}`);
+              if (unitEl && data.unitId) unitEl.value = data.unitId;
+            }
+          }
+        }
+        this.recalculate();
+        this.showToast(`Restored calculation: ${shape.name}`);
+      }
+    }
     renderHistoryList() {
       const container = document.getElementById("history-list-container");
       const items = Store.getHistory();
@@ -30948,11 +34729,15 @@ void main() {
       }
       items.forEach((item) => {
         const card = document.createElement("div");
-        card.className = "fluent-card";
+        card.className = "fluent-card history-card-interactive";
+        card.title = "Click to open and recompute this calculation";
         card.innerHTML = `
         <div class="fluent-card-header">
           <div>
-            <div style="font-size: 16px; font-weight: 700; color: var(--accent-light);">${item.shapeName}</div>
+            <div style="font-size: 16px; font-weight: 700; color: var(--accent-light); display: flex; align-items: center; gap: 8px;">
+              <span>${item.shapeName}</span>
+              <span style="font-size: 11px; font-weight: 500; background: rgba(96, 205, 255, 0.15); color: #60cdff; padding: 2px 6px; border-radius: 4px;">Click to restore \u2197</span>
+            </div>
             <div style="font-size: 12px; color: var(--text-tertiary);">${new Date(item.timestamp).toLocaleString()} \u2022 ${item.methodName}</div>
           </div>
           <button class="fluent-icon-btn" data-delete-id="${item.id}" title="Delete">
@@ -30966,9 +34751,14 @@ void main() {
           ${item.outputs.slice(0, 4).map((o) => `<span style="color: #34d399;"><strong>${o.label}:</strong> ${o.value} ${o.unitSymbol}</span>`).join("")}
         </div>
       `;
-        card.querySelector(`[data-delete-id="${item.id}"]`).addEventListener("click", () => {
+        card.addEventListener("click", () => {
+          this.loadSavedCalculation(item);
+        });
+        card.querySelector(`[data-delete-id="${item.id}"]`).addEventListener("click", (e) => {
+          e.stopPropagation();
           Store.deleteHistoryItem(item.id);
           this.renderHistoryList();
+          this.showToast("Calculation removed from history");
         });
         container.appendChild(card);
       });
