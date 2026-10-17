@@ -4,11 +4,37 @@ This directory contains the production packages generated for Windows 11:
 
 | Package File | Format | Target Platform | Description |
 |---|---|---|---|
-| `GeoFluent-Setup-1.2.0.exe` | NSIS Executable Installer | Windows 10/11 (x64) | Full installation wizard with Start Menu and Desktop shortcuts (solid LZMA compressed) |
-| `GeoFluent-Portable-1.2.0.exe` | Standalone Executable | Windows 10/11 (x64) | Zero-install standalone executable |
-| `GeoFluent-1.2.0.msi` | Microsoft Windows Installer | Windows 10/11 (x64) | Enterprise MSI package using Microsoft Cabinet (CAB) compression with GUID component tracking |
-| `GeoFluent-1.2.0.appx` | Windows AppX Package | Windows 10/11 (x64) | Universal Windows Platform format for sideloading and Microsoft Store |
-| `GeoFluent-1.2.0.msix` | Windows 11 MSIX Package | Windows 11 (x64) | Modern containerized package with 64KB block-level compression for instant streaming without extraction |
+| `GeoFluent-Setup-1.3.0.exe` | NSIS Executable Installer | Windows 10/11 (x64) | Full installation wizard with Start Menu and Desktop shortcuts (solid LZMA compressed) |
+| `GeoFluent-Portable-1.3.0.exe` | Standalone Executable | Windows 10/11 (x64) | Zero-install standalone executable |
+| `GeoFluent-1.3.0.msi` | Microsoft Windows Installer | Windows 10/11 (x64) | Enterprise MSI package using Microsoft Cabinet (CAB) compression with GUID component tracking |
+| `GeoFluent-1.3.0.appx` | Windows AppX Package | Windows 10/11 (x64) | Universal Windows Platform format for sideloading and Microsoft Store |
+| `GeoFluent-1.3.0.msix` | Windows 11 MSIX Package | Windows 11 (x64) | Modern containerized package signed with developer certificate |
+| `GeoFluentDev.cer` | Security Certificate | Windows 10/11 | Developer public code-signing certificate for sideloading MSIX |
+| `Install-GeoFluent.bat` | 1-Click Installer | Windows 10/11 | Automatically trusts the certificate and installs the MSIX package |
+
+---
+
+### How to Install the MSIX Package (Resolving Error 0x800B010A / 0x800B0109)
+
+When installing an `.msix` outside the Microsoft Store, Windows security requires the package's signing certificate to be trusted on the machine:
+
+#### Option 1: 1-Click Automated Install (Recommended)
+Simply double-click **`Install-GeoFluent.bat`** (or right-click `Install-App.ps1` -> "Run with PowerShell"). It will trust `GeoFluentDev.cer` and install the package automatically.
+
+#### Option 2: Manual Certificate Trust (20 Seconds)
+1. Double-click **`GeoFluentDev.cer`** in this folder.
+2. Click **"Install Certificate..."**.
+3. Select **"Local Machine"** (or Current User) and click Next.
+4. Select **"Place all certificates in the following store"** -> click **Browse** -> select **"Trusted People"** (or "Trusted Root Certification Authorities") -> click OK -> Next -> Finish.
+5. Now double-click **`GeoFluent-1.3.0.msix`** — Windows App Installer will display a green verified checkmark and install seamlessly!
+
+#### Option 3: Zero-Certificate Install
+If you do not want to configure a sideload certificate, simply run:
+- **`GeoFluent-Setup-1.3.0.exe`** (Standard Windows installer)
+- **`GeoFluent-1.3.0.msi`** (Windows Installer)
+- **`GeoFluent-Portable-1.3.0.exe`** (Standalone executable)
+
+---
 
 ### Package Formats & Size Explanation
 - **EXE (NSIS)** (~106 MB): Utilizes 7-Zip/LZMA solid archive compression across all binaries and resources, achieving maximum possible compression (~70% reduction) for traditional installations.
