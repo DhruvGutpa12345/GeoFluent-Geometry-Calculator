@@ -6,6 +6,14 @@
 const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 
+// Optimize Electron Chromium startup performance: disable background services not needed for geometry utility
+app.commandLine.appendSwitch('disable-http-cache');
+app.commandLine.appendSwitch('disable-background-networking');
+app.commandLine.appendSwitch('disable-component-update');
+app.commandLine.appendSwitch('disable-domain-reliability');
+app.commandLine.appendSwitch('disable-sync');
+app.commandLine.appendSwitch('disable-speech-api');
+
 let mainWindow = null;
 
 function createWindow() {
@@ -17,20 +25,16 @@ function createWindow() {
     title: 'GeoFluent Geometry Calculator',
     icon: path.join(__dirname, '../../assets/icon.png'),
     frame: false,
-    show: false, // Performance: avoid white/unpainted flash during initial load
+    show: true, // Show immediately with solid background color for sub-100ms perceived launch
+    backgroundColor: '#18191c',
     backgroundMaterial: 'mica', // Windows 11 native Mica backdrop
     titleBarStyle: 'hidden',
-    backgroundColor: '#18191c',
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       nodeIntegration: false,
       contextIsolation: true,
       sandbox: false
     }
-  });
-
-  mainWindow.once('ready-to-show', () => {
-    mainWindow.show();
   });
 
   mainWindow.webContents.on('console-message', (event, level, message, line, sourceId) => {

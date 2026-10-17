@@ -1,7 +1,7 @@
 {
   "name": "geofluent-geometry-calculator",
   "productName": "GeoFluent",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "High-precision Fluent 2 Geometry Calculator for Windows 11 with interactive 2D diagrams, 3D WebGL solids, and unit conversions.",
   "main": "src/main/main.js",
   "author": "Dhruv Gupta",
@@ -11,7 +11,8 @@
     "url": "https://github.com/DhruvGutpa12345/GeoFluent-Geometry-Calculator.git"
   },
   "scripts": {
-    "bundle": "esbuild src/renderer/js/app.js --bundle --outfile=src/renderer/js/bundle.js --format=iife --platform=browser",
+    "clean:dist": "node -e \"const fs=require('fs'); if(fs.existsSync('dist')){fs.readdirSync('dist').forEach(f=>{if(!f.endsWith('.md') && f!=='win-unpacked'){try{fs.rmSync('dist/'+f,{recursive:true,force:true})}catch(e){}}})}\"",
+    "bundle": "esbuild src/renderer/js/app.js --bundle --minify --outfile=src/renderer/js/bundle.js --format=iife --platform=browser",
     "start": "npm run bundle && electron .",
     "build": "npm run bundle && electron-builder --win",
     "pack:exe": "npm run bundle && electron-builder --win nsis portable",
@@ -21,11 +22,15 @@
   "build": {
     "appId": "com.dhruvgupta.geofluent",
     "productName": "GeoFluent",
+    "compression": "maximum",
     "directories": {
       "output": "dist"
     },
     "files": [
-      "src/**/*",
+      "src/main/**/*",
+      "src/renderer/index.html",
+      "src/renderer/styles/**/*",
+      "src/renderer/js/bundle.js",
       "assets/**/*",
       "package.json"
     ],
@@ -62,12 +67,11 @@
       "artifactName": "GeoFluent-${version}.${ext}"
     }
   },
-  "dependencies": {
-    "three": "^0.186.1"
-  },
+  "dependencies": {},
   "devDependencies": {
     "electron": "^44.8.0",
     "electron-builder": "^26.15.3",
-    "esbuild": "^0.28.2"
+    "esbuild": "^0.28.2",
+    "three": "^0.186.1"
   }
 }
