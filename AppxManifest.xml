@@ -5,7 +5,7 @@
          IgnorableNamespaces="uap rescap">
   <Identity Name="DhruvGupta.GeoFluent-GeometryCalculator"
             Publisher="CN=CB32F928-2859-4967-B8F7-396A9964D1FB"
-            Version="1.5.0.0"
+            Version="1.6.0.0"
             ProcessorArchitecture="x64" />
   
   <Properties>
@@ -29,7 +29,7 @@
                  EntryPoint="Windows.FullTrustApplication">
       <uap:VisualElements DisplayName="GeoFluent - Geometry Calculator"
                           Description="Geometry app for Windows 11"
-                          BackgroundColor="#18191C"
+                          BackgroundColor="#13171F"
                           Square150x150Logo="assets\store\Square150x150Logo.png"
                           Square44x44Logo="assets\store\Square44x44Logo.png">
         <uap:DefaultTile Wide310x150Logo="assets\store\Wide310x150Logo.png"
