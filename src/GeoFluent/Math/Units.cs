@@ -1,3 +1,6 @@
+using System.Globalization;
+using GeoFluent.Services;
+
 namespace GeoFluent.Math;
 
 public enum UnitType
@@ -126,16 +129,59 @@ public static class UnitConverter
         return unitId;
     }
 
-    public static string FormatNumber(double val, int precision = 4)
+    /// <summary>
+    /// Formats a numerical value according to precision settings.
+    /// When precision is -1 (or omitted), intelligent Auto precision formatting is applied.
+    /// </summary>
+    public static string FormatNumber(double val, int? precision = null)
     {
         if (double.IsNaN(val)) return "—";
         if (double.IsPositiveInfinity(val)) return "∞";
         if (double.IsNegativeInfinity(val)) return "-∞";
         if (System.Math.Abs(val) < 1e-12) return "0";
 
-        if (System.Math.Abs(val) >= 1e12 || (System.Math.Abs(val) < 1e-4 && System.Math.Abs(val) > 0))
-            return val.ToString($"E{precision}");
+        int effectivePrec = precision ?? UserSettingsService.Precision;
 
-        return val.ToString($"N{precision}");
+        // Fixed precision mode (0, 2, 3, 4, 6, 8, etc.)
+        if (effectivePrec >= 0)
+        {
+            if (System.Math.Abs(val) >= 1e12 || (System.Math.Abs(val) < 1e-4 && System.Math.Abs(val) > 0))
+                return val.ToString($"E{effectivePrec}", CultureInfo.CurrentCulture);
+
+            return val.ToString($"N{effectivePrec}", CultureInfo.CurrentCulture);
+        }
+
+        // Auto (Intelligent) precision mode
+        // 1. Extreme numbers outside typical engineering scales use compact general notation
+        if (System.Math.Abs(val) >= 1e10 || (System.Math.Abs(val) < 1e-4 && System.Math.Abs(val) > 0))
+        {
+            return val.ToString("G6", CultureInfo.CurrentCulture);
+        }
+
+        // 2. Integers or near-integers (e.g. 25.0, 1000.000000001) display cleanly without decimal points
+        double nearestInt = System.Math.Round(val);
+        if (System.Math.Abs(val - nearestInt) < 1e-9)
+        {
+            return nearestInt.ToString("N0", CultureInfo.CurrentCulture);
+        }
+
+        // 3. Floating numbers: round to at most 6 decimal places and strip redundant trailing zeros
+        double rounded = System.Math.Round(val, 6, MidpointRounding.AwayFromZero);
+        if (System.Math.Abs(rounded - System.Math.Round(rounded)) < 1e-9)
+        {
+            return System.Math.Round(rounded).ToString("N0", CultureInfo.CurrentCulture);
+        }
+
+        string formatted = rounded.ToString("N6", CultureInfo.CurrentCulture);
+        string decSep = CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator;
+        if (formatted.Contains(decSep))
+        {
+            formatted = formatted.TrimEnd('0');
+            if (formatted.EndsWith(decSep))
+            {
+                formatted = formatted[..^decSep.Length];
+            }
+        }
+        return formatted;
     }
 }

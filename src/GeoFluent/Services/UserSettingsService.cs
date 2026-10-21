@@ -6,7 +6,10 @@ public static class UserSettingsService
 {
     public static ElementTheme CurrentTheme { get; set; } = ElementTheme.Default;
 
-    public static int Precision { get; set; } = 4;
+    /// <summary>
+    /// Calculation precision in decimal places. A value of -1 denotes Auto (Intelligent) precision.
+    /// </summary>
+    public static int Precision { get; set; } = -1;
 
     public static string DefaultLengthUnit { get; set; } = "cm";
     public static string DefaultAreaUnit { get; set; } = "cm2";

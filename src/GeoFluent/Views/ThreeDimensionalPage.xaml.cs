@@ -33,11 +33,12 @@ public sealed partial class ThreeDimensionalPage : Page
         };
 
         Loaded += ThreeDimensionalPage_Loaded;
-        Unloaded += (s, e) => _rotateTimer.Stop();
+        Unloaded += ThreeDimensionalPage_Unloaded;
     }
 
     private void ThreeDimensionalPage_Loaded(object sender, RoutedEventArgs e)
     {
+        UserSettingsService.SettingsChanged += OnSettingsChanged;
         PopulateOutputUnitPickers();
         PopulateShapes();
         _rotateTimer.Start();
@@ -47,6 +48,20 @@ public sealed partial class ThreeDimensionalPage : Page
         {
             RestoreFromHistory(HistoryService.PendingRestore);
             HistoryService.PendingRestore = null;
+        }
+    }
+
+    private void ThreeDimensionalPage_Unloaded(object sender, RoutedEventArgs e)
+    {
+        _rotateTimer.Stop();
+        UserSettingsService.SettingsChanged -= OnSettingsChanged;
+    }
+
+    private void OnSettingsChanged()
+    {
+        if (_latestResult != null)
+        {
+            RenderOutputs(_latestResult);
         }
     }
 

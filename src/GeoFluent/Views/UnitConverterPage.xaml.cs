@@ -15,7 +15,15 @@ public sealed partial class UnitConverterPage : Page
     public UnitConverterPage()
     {
         InitializeComponent();
-        Loaded += (s, e) => PopulateUnits();
+        Loaded += (s, e) =>
+        {
+            PopulateUnits();
+            UserSettingsService.SettingsChanged += PerformConversion;
+        };
+        Unloaded += (s, e) =>
+        {
+            UserSettingsService.SettingsChanged -= PerformConversion;
+        };
     }
 
     private void BtnCat_Click(object sender, RoutedEventArgs e)
@@ -31,10 +39,10 @@ public sealed partial class UnitConverterPage : Page
             };
 
             // Update pill button styles
-            BtnCatLength.Style = _activeCategory == UnitType.Length ? (Style)Application.Current.Resources["AccentButtonStyle"] : (Style)Application.Current.Resources["DefaultButtonStyle"];
-            BtnCatArea.Style = _activeCategory == UnitType.Area ? (Style)Application.Current.Resources["AccentButtonStyle"] : (Style)Application.Current.Resources["DefaultButtonStyle"];
-            BtnCatVolume.Style = _activeCategory == UnitType.Volume ? (Style)Application.Current.Resources["AccentButtonStyle"] : (Style)Application.Current.Resources["DefaultButtonStyle"];
-            BtnCatAngle.Style = _activeCategory == UnitType.Angle ? (Style)Application.Current.Resources["AccentButtonStyle"] : (Style)Application.Current.Resources["DefaultButtonStyle"];
+            BtnCatLength.Style = _activeCategory == UnitType.Length ? (Style)Application.Current.Resources["AccentButtonStyle"] : null;
+            BtnCatArea.Style = _activeCategory == UnitType.Area ? (Style)Application.Current.Resources["AccentButtonStyle"] : null;
+            BtnCatVolume.Style = _activeCategory == UnitType.Volume ? (Style)Application.Current.Resources["AccentButtonStyle"] : null;
+            BtnCatAngle.Style = _activeCategory == UnitType.Angle ? (Style)Application.Current.Resources["AccentButtonStyle"] : null;
 
             PopulateUnits();
         }

@@ -50,7 +50,7 @@
                                 <TextBlock Text="Converted Result:" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center" />
                                 <Button Grid.Column="1" Content="Copy" Click="BtnCopyResult_Click" Padding="8,2" />
                             </Grid>
-                            <TextBox x:Name="TxtToValue" IsReadOnly="True" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                            <TextBox x:Name="TxtToValue" IsReadOnly="True" FontWeight="SemiBold" />
                             <ComboBox x:Name="CmbToUnit" HorizontalAlignment="Stretch" SelectionChanged="CmbToUnit_SelectionChanged" />
                         </StackPanel>
                     </Grid>

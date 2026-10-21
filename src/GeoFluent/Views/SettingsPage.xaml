@@ -35,7 +35,8 @@
 
                     <Grid ColumnDefinitions="240,*" RowDefinitions="Auto,Auto" RowSpacing="12">
                         <TextBlock Grid.Row="0" Grid.Column="0" Text="Decimal Places Precision:" Style="{ThemeResource BodyTextBlockStyle}" VerticalAlignment="Center" />
-                        <ComboBox Grid.Row="0" Grid.Column="1" x:Name="CmbPrecision" SelectionChanged="CmbPrecision_SelectionChanged" Width="140">
+                        <ComboBox Grid.Row="0" Grid.Column="1" x:Name="CmbPrecision" SelectionChanged="CmbPrecision_SelectionChanged" Width="180">
+                            <ComboBoxItem Content="Auto (Intelligent)" Tag="-1" />
                             <ComboBoxItem Content="2 Decimals" Tag="2" />
                             <ComboBoxItem Content="3 Decimals" Tag="3" />
                             <ComboBoxItem Content="4 Decimals" Tag="4" />

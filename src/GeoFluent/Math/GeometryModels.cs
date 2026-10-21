@@ -20,7 +20,7 @@ public readonly record struct CalculationOutput(
     string? TextValue = null
 )
 {
-    public string Format(string? unitId = null, int precision = 4)
+    public string Format(string? unitId = null, int? precision = null)
     {
         if (TextValue != null) return TextValue;
         if (UnitType == UnitType.Count) return UnitConverter.FormatNumber(Value, precision);

@@ -23,10 +23,12 @@ public sealed partial class TwoDimensionalPage : Page
     {
         InitializeComponent();
         Loaded += TwoDimensionalPage_Loaded;
+        Unloaded += TwoDimensionalPage_Unloaded;
     }
 
     private void TwoDimensionalPage_Loaded(object sender, RoutedEventArgs e)
     {
+        UserSettingsService.SettingsChanged += OnSettingsChanged;
         PopulateOutputUnitPickers();
         PopulateShapes();
 
@@ -35,6 +37,19 @@ public sealed partial class TwoDimensionalPage : Page
         {
             RestoreFromHistory(HistoryService.PendingRestore);
             HistoryService.PendingRestore = null;
+        }
+    }
+
+    private void TwoDimensionalPage_Unloaded(object sender, RoutedEventArgs e)
+    {
+        UserSettingsService.SettingsChanged -= OnSettingsChanged;
+    }
+
+    private void OnSettingsChanged()
+    {
+        if (_latestResult != null)
+        {
+            RenderOutputs(_latestResult);
         }
     }
 

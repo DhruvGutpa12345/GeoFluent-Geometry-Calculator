@@ -35,15 +35,16 @@ public sealed partial class SettingsPage : Page
 
         // Precision
         int prec = UserSettingsService.Precision;
+        int selectedIndex = -1;
         for (int i = 0; i < CmbPrecision.Items.Count; i++)
         {
             if ((CmbPrecision.Items[i] as ComboBoxItem)?.Tag?.ToString() == prec.ToString())
             {
-                CmbPrecision.SelectedIndex = i;
+                selectedIndex = i;
                 break;
             }
         }
-        if (CmbPrecision.SelectedIndex < 0) CmbPrecision.SelectedIndex = 2; // 4 decimals
+        CmbPrecision.SelectedIndex = selectedIndex >= 0 ? selectedIndex : 0; // Default to Auto (Intelligent)
 
         _isInitializing = false;
     }

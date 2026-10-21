@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Package xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10" xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10" xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities" IgnorableNamespaces="uap rescap">
-  <Identity Name="DhruvGupta.GeoFluent-GeometryCalculator" Publisher="CN=CB32F928-2859-4967-B8F7-396A9964D1FB" Version="1.6.0.18" ProcessorArchitecture="x64" />
+  <Identity Name="DhruvGupta.GeoFluent-GeometryCalculator" Publisher="CN=CB32F928-2859-4967-B8F7-396A9964D1FB" Version="1.6.0.21" ProcessorArchitecture="x64" />
   <Properties>
     <DisplayName>GeoFluent - Geometry Calculator</DisplayName>
     <PublisherDisplayName>Dhruv Gupta</PublisherDisplayName>
