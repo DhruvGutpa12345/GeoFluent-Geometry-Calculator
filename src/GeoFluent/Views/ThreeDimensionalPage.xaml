@@ -1,0 +1,91 @@
+<Page
+    x:Class="GeoFluent.Views.ThreeDimensionalPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:math="using:GeoFluent.Math"
+    mc:Ignorable="d">
+
+    <ScrollViewer Padding="24">
+        <StackPanel Spacing="20" MaxWidth="960" HorizontalAlignment="Left">
+            
+            <!-- Page Header -->
+            <StackPanel Spacing="4">
+                <TextBlock Text="3D Solid Shapes" Style="{ThemeResource TitleLargeTextBlockStyle}" />
+                <TextBlock Text="Calculate volume, total surface area, lateral area, space diagonals, and derivation steps." Style="{ThemeResource BodyTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+            </StackPanel>
+
+            <!-- Shape Selector Card -->
+            <Border CornerRadius="8" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" Padding="16">
+                <StackPanel Orientation="Horizontal" Spacing="16" VerticalAlignment="Center">
+                    <TextBlock Text="Select 3D Solid:" Style="{ThemeResource BodyStrongTextBlockStyle}" VerticalAlignment="Center" />
+                    <ComboBox x:Name="CmbShape" SelectedIndex="0" SelectionChanged="CmbShape_SelectionChanged" Width="240">
+                        <ComboBoxItem Content="Sphere" Tag="Sphere" />
+                        <ComboBoxItem Content="Hemisphere" Tag="Hemisphere" />
+                        <ComboBoxItem Content="Cylinder" Tag="Cylinder" />
+                        <ComboBoxItem Content="Cone" Tag="Cone" />
+                        <ComboBoxItem Content="Cube" Tag="Cube" />
+                        <ComboBoxItem Content="Rectangular Prism (Cuboid)" Tag="Prism" />
+                        <ComboBoxItem Content="Regular Pyramid" Tag="Pyramid" />
+                        <ComboBoxItem Content="Torus (Donut)" Tag="Torus" />
+                    </ComboBox>
+                </StackPanel>
+            </Border>
+
+            <!-- Parameters Input Card -->
+            <Border CornerRadius="8" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" Padding="20">
+                <StackPanel Spacing="16">
+                    <TextBlock Text="Input Dimensions" Style="{ThemeResource SubtitleTextBlockStyle}" />
+                    
+                    <StackPanel x:Name="InputsPanel" Spacing="12" />
+
+                    <Button x:Name="BtnCalculate" Content="Calculate" Style="{ThemeResource AccentButtonStyle}" Click="BtnCalculate_Click" Width="140" HorizontalAlignment="Left" />
+                    
+                    <InfoBar x:Name="ErrorBar" IsOpen="False" Severity="Error" Title="Calculation Error" Message="" />
+                </StackPanel>
+            </Border>
+
+            <!-- Results Card -->
+            <Border x:Name="ResultsCard" CornerRadius="8" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" Padding="20" Visibility="Collapsed">
+                <StackPanel Spacing="16">
+                    <TextBlock Text="Solid Metric Outputs" Style="{ThemeResource SubtitleTextBlockStyle}" />
+
+                    <ItemsControl x:Name="OutputsList">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="math:CalculationOutput">
+                                <Grid Margin="0,4" ColumnDefinitions="220,*,Auto">
+                                    <TextBlock Text="{x:Bind Label}" Style="{ThemeResource BodyTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center" />
+                                    <TextBlock Grid.Column="1" Text="{x:Bind DisplayValue}" Style="{ThemeResource BodyStrongTextBlockStyle}" VerticalAlignment="Center" />
+                                    <Border Grid.Column="2" CornerRadius="4" Background="{ThemeResource SubtleFillColorSecondaryBrush}" Padding="6,2">
+                                        <TextBlock Text="{x:Bind Symbol}" Style="{ThemeResource CaptionTextBlockStyle}" />
+                                    </Border>
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+
+            <!-- Mathematical Steps Card -->
+            <Border x:Name="StepsCard" CornerRadius="8" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" Padding="20" Visibility="Collapsed">
+                <StackPanel Spacing="16">
+                    <TextBlock Text="Step-by-Step Derivation" Style="{ThemeResource SubtitleTextBlockStyle}" />
+
+                    <ItemsControl x:Name="StepsList">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="math:CalculationStep">
+                                <StackPanel Margin="0,8" Spacing="4">
+                                    <TextBlock Text="{x:Bind Title}" Style="{ThemeResource BodyStrongTextBlockStyle}" Foreground="{ThemeResource AccentFillColorDefaultBrush}" />
+                                    <TextBlock Text="{x:Bind Formula}" Style="{ThemeResource CaptionTextBlockStyle}" FontFamily="Consolas, Cascadia Code" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                    <TextBlock Text="{x:Bind Substitution}" Style="{ThemeResource BodyTextBlockStyle}" FontFamily="Consolas, Cascadia Code" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+
+        </StackPanel>
+    </ScrollViewer>
+</Page>

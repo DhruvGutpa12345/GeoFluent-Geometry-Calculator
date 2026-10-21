@@ -3,13 +3,13 @@
     <MajorVersion>1</MajorVersion>
     <MinorVersion>6</MinorVersion>
     <BuildVersion>0</BuildVersion>
-    <RevisionVersion>3</RevisionVersion>
+    <RevisionVersion>14</RevisionVersion>
     <VersionPrefix>$(MajorVersion).$(MinorVersion).$(BuildVersion)</VersionPrefix>
     <VersionSuffix>
     </VersionSuffix>
-    <Version>1.6.0.3</Version>
-    <AssemblyVersion>1.6.0.3</AssemblyVersion>
-    <FileVersion>1.6.0.3</FileVersion>
-    <InformationalVersion>1.6.0.3</InformationalVersion>
+    <Version>1.6.0.14</Version>
+    <AssemblyVersion>1.6.0.14</AssemblyVersion>
+    <FileVersion>1.6.0.14</FileVersion>
+    <InformationalVersion>1.6.0.14</InformationalVersion>
   </PropertyGroup>
 </Project>

@@ -53,6 +53,22 @@ if ($Target -eq 'all' -or $Target -eq 'portable') {
         Write-Error "Portable build failed."
         exit $LASTEXITCODE
     }
+
+    # Code-sign unpackaged executable to satisfy Windows Application Control / Smart App Control
+    $signtool = (Get-ChildItem -Path "$env:USERPROFILE\.nuget\packages\microsoft.windows.sdk.buildtools" -Filter "signtool.exe" -Recurse -ErrorAction SilentlyContinue | Where-Object { $_.FullName -like "*x64*" } | Select-Object -First 1).FullName
+    $certPath = Join-Path $rootDir "certs\GeoFluentDev.pfx"
+    $targetExe = Join-Path $portableDist "GeoFluent.exe"
+
+    if ($signtool -and (Test-Path $signtool) -and (Test-Path $certPath) -and (Test-Path $targetExe)) {
+        Write-Host "Signing $targetExe with dev certificate..." -ForegroundColor Cyan
+        & $signtool sign /fd SHA256 /f $certPath /p "GeoFluent2026" $targetExe
+        if ($LASTEXITCODE -eq 0) {
+            Write-Host "Binary signed successfully." -ForegroundColor Green
+        } else {
+            Write-Warning "Code-signing completed with code $LASTEXITCODE"
+        }
+    }
+
     Write-Host "Portable build succeeded: $portableDist\GeoFluent.exe" -ForegroundColor Green
 }
 
@@ -67,14 +83,24 @@ if ($Target -eq 'all' -or $Target -eq 'msix') {
         -r win-x64 `
         -p:WindowsPackageType=MSIX `
         -p:GenerateAppxPackageOnBuild=true `
-        -p:AppxPackageDir="$msixDist\" `
+        -p:AppxPackageDir="$msixDist\\" `
         -p:AppxBundle=Never `
-        -p:UapAppxPackageBuildMode=StoreUpload
+        -p:AppxPackageSigningEnabled=true `
+        -p:PackageCertificateKeyFile="$rootDir\certs\GeoFluentDev.pfx" `
+        -p:PackageCertificatePassword="GeoFluent2026"
 
     if ($LASTEXITCODE -ne 0) {
         Write-Error "MSIX build failed."
         exit $LASTEXITCODE
     }
+
+    # Locate generated .msix and copy to root of dist/msix for convenient access
+    $generatedMsix = Get-ChildItem -Path $msixDist -Filter "*.msix" -Recurse | Where-Object { $_.Name -like "GeoFluent*.msix" } | Select-Object -First 1
+    if ($generatedMsix) {
+        Copy-Item -Path $generatedMsix.FullName -Destination (Join-Path $msixDist "GeoFluent.msix") -Force
+        Write-Host "MSIX package copied to: $msixDist\GeoFluent.msix" -ForegroundColor Green
+    }
+
     Write-Host "MSIX package succeeded in: $msixDist" -ForegroundColor Green
 }
 

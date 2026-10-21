@@ -1,4 +1,4 @@
-using System.Reflection;
+using GeoFluent.Views;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 
@@ -8,31 +8,46 @@ public sealed partial class MainWindow : Window
 {
     public MainWindow()
     {
-        InitializeComponent();
+        try
+        {
+            InitializeComponent();
 
-        // Native TitleBar integration
-        ExtendsContentIntoTitleBar = true;
-        SetTitleBar(AppTitleBar);
+            // Native TitleBar integration
+            ExtendsContentIntoTitleBar = true;
+            SetTitleBar(AppTitleBar);
 
-        // Display live build version from Assembly / Version.props
-        Version? version = Assembly.GetExecutingAssembly().GetName().Version;
-        TxtBuildVersion.Text = version != null
-            ? $"{version.Major}.{version.Minor}.{version.Build}.{version.Revision}"
-            : "1.6.0.1";
+            // Navigate to default page
+            ContentFrame.Navigate(typeof(TwoDimensionalPage));
+        }
+        catch (Exception ex)
+        {
+            string logPath = System.IO.Path.Combine(AppContext.BaseDirectory, "mainwindow_crash.log");
+            System.IO.File.WriteAllText(logPath, $"[MainWindow Exception] {ex}\nStackTrace:\n{ex.StackTrace}");
+            throw;
+        }
     }
 
     private void NavView_SelectionChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs args)
     {
         if (args.IsSettingsSelected)
         {
-            // Settings & About
+            ContentFrame.Navigate(typeof(SettingsPage));
             return;
         }
 
         if (args.SelectedItemContainer is NavigationViewItem item)
         {
             string? tag = item.Tag?.ToString();
-            // Route to appropriate view
+            Type pageType = tag switch
+            {
+                "2D" => typeof(TwoDimensionalPage),
+                "3D" => typeof(ThreeDimensionalPage),
+                "Converter" => typeof(UnitConverterPage),
+                "History" => typeof(HistoryPage),
+                _ => typeof(TwoDimensionalPage)
+            };
+
+            ContentFrame.Navigate(pageType);
         }
     }
 }
