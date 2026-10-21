@@ -152,27 +152,63 @@ public static class UnitConverter
         }
 
         // Auto (Intelligent) precision mode
-        // 1. Extreme numbers outside typical engineering scales use compact general notation
-        if (System.Math.Abs(val) >= 1e10 || (System.Math.Abs(val) < 1e-4 && System.Math.Abs(val) > 0))
+        // 1. Extreme scales outside standard engineering magnitudes use compact scientific notation
+        double abs = System.Math.Abs(val);
+        if (abs >= 1e9 || (abs < 1e-4 && abs > 0))
         {
-            return val.ToString("G6", CultureInfo.CurrentCulture);
+            return val.ToString("G4", CultureInfo.CurrentCulture);
         }
 
-        // 2. Integers or near-integers (e.g. 25.0, 1000.000000001) display cleanly without decimal points
+        // 2. Integers or near-integers (e.g. 25.0, 1000.000000001) display cleanly with no decimal points
         double nearestInt = System.Math.Round(val);
-        if (System.Math.Abs(val - nearestInt) < 1e-9)
+        if (System.Math.Abs(val - nearestInt) < 1e-6)
         {
             return nearestInt.ToString("N0", CultureInfo.CurrentCulture);
         }
 
-        // 3. Floating numbers: round to at most 6 decimal places and strip redundant trailing zeros
-        double rounded = System.Math.Round(val, 6, MidpointRounding.AwayFromZero);
-        if (System.Math.Abs(rounded - System.Math.Round(rounded)) < 1e-9)
+        // 3. Determine max decimal places adaptively based on magnitude:
+        //    - Large & Medium numbers (>= 10): 2 decimal places (e.g. 153.94, 78.54, 43.98, 36.87, 328.08)
+        //    - Small numbers (1 <= x < 10): 3 decimal places (e.g. 3.142, 1.414, 2.598)
+        //    - Fractions (0.01 <= x < 1): 4 decimal places (e.g. 0.3333, 0.3937, 0.0254)
+        //    - Small fractions (< 0.01): 4-5 decimals to preserve up to 3-4 significant figures (e.g. 0.00254)
+        int maxDecimals;
+        if (abs >= 10.0)
+        {
+            maxDecimals = 2;
+        }
+        else if (abs >= 1.0)
+        {
+            maxDecimals = 3;
+        }
+        else if (abs >= 0.01)
+        {
+            maxDecimals = 4;
+        }
+        else
+        {
+            int leadingZeros = (int)System.Math.Floor(-System.Math.Log10(abs));
+            maxDecimals = System.Math.Clamp(leadingZeros + 3, 4, 5);
+        }
+
+        // 4. Snap to fewer decimal places if within floating-point roundoff jitter:
+        for (int d = 0; d < maxDecimals; d++)
+        {
+            double snap = System.Math.Round(val, d, MidpointRounding.AwayFromZero);
+            if (System.Math.Abs(val - snap) < 1e-6)
+            {
+                val = snap;
+                maxDecimals = d;
+                break;
+            }
+        }
+
+        double rounded = System.Math.Round(val, maxDecimals, MidpointRounding.AwayFromZero);
+        if (System.Math.Abs(rounded - System.Math.Round(rounded)) < 1e-6)
         {
             return System.Math.Round(rounded).ToString("N0", CultureInfo.CurrentCulture);
         }
 
-        string formatted = rounded.ToString("N6", CultureInfo.CurrentCulture);
+        string formatted = rounded.ToString($"N{maxDecimals}", CultureInfo.CurrentCulture);
         string decSep = CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator;
         if (formatted.Contains(decSep))
         {
