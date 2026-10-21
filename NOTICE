@@ -1,0 +1,27 @@
+GeoFluent - Geometry Calculator
+Copyright (c) 2026 Dhruv Gupta. All rights reserved.
+
+This project is licensed under the MIT License.
+
+========================================================================
+Third-Party and Platform Attributions
+========================================================================
+
+1. Microsoft Windows App SDK & WinUI 3
+   Copyright (c) Microsoft Corporation. All rights reserved.
+   Licensed under the MIT License.
+   https://github.com/microsoft/WindowsAppSDK
+
+2. .NET Runtime & Libraries (.NET 10 LTS)
+   Copyright (c) .NET Foundation and Contributors.
+   Licensed under the MIT License.
+   https://github.com/dotnet/runtime
+
+3. CommunityToolkit.Mvvm
+   Copyright (c) .NET Foundation and Contributors.
+   Licensed under the MIT License.
+   https://github.com/CommunityToolkit/dotnet
+
+4. ArtCraft Crafting Suite (VectorCraft & PhotoCraft)
+   Vector illustration and asset generation suite used in development.
+   Licensed under MIT / Apache-2.0.

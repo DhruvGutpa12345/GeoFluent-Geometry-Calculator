@@ -1,0 +1,17 @@
+<Application
+    x:Class="GeoFluent.App"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:GeoFluent">
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <XamlControlsResources xmlns="using:Microsoft.UI.Xaml.Controls" />
+            </ResourceDictionary.MergedDictionaries>
+
+            <!-- Windows 11 Fluent 2 Accent Colors and Brushes -->
+            <Color x:Key="GeoAccentColor">#0078D4</Color>
+            <SolidColorBrush x:Key="GeoAccentBrush" Color="{StaticResource GeoAccentColor}" />
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>

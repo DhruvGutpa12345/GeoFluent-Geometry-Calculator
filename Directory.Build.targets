@@ -1,0 +1,13 @@
+<Project>
+  <!-- Automatic Version Increment on Every Recompile Target -->
+  <Target Name="AutoIncrementVersionOnBuild" BeforeTargets="BeforeBuild;BeforeRebuild" Condition="'$(DesignTimeBuild)' != 'true'">
+    <PropertyGroup>
+      <VersionPropsPath>$(MSBuildThisFileDirectory)Version.props</VersionPropsPath>
+      <ManifestPath>$(MSBuildProjectDirectory)\Package.appxmanifest</ManifestPath>
+      <ScriptPath>$(MSBuildThisFileDirectory)scripts\increment-version.ps1</ScriptPath>
+    </PropertyGroup>
+
+    <Exec Command="powershell -NoProfile -ExecutionPolicy Bypass -File &quot;$(ScriptPath)&quot; -VersionProps &quot;$(VersionPropsPath)&quot; -ManifestPath &quot;$(ManifestPath)&quot;"
+          ConsoleToMSBuild="true" StandardOutputImportance="High" ContinueOnError="WarnAndContinue" />
+  </Target>
+</Project>

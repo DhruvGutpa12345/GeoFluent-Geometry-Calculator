@@ -1,0 +1,15 @@
+<Project>
+  <PropertyGroup>
+    <MajorVersion>1</MajorVersion>
+    <MinorVersion>6</MinorVersion>
+    <BuildVersion>0</BuildVersion>
+    <RevisionVersion>3</RevisionVersion>
+    <VersionPrefix>$(MajorVersion).$(MinorVersion).$(BuildVersion)</VersionPrefix>
+    <VersionSuffix>
+    </VersionSuffix>
+    <Version>1.6.0.3</Version>
+    <AssemblyVersion>1.6.0.3</AssemblyVersion>
+    <FileVersion>1.6.0.3</FileVersion>
+    <InformationalVersion>1.6.0.3</InformationalVersion>
+  </PropertyGroup>
+</Project>
