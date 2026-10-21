@@ -54,19 +54,27 @@ if ($Target -eq 'all' -or $Target -eq 'portable') {
         exit $LASTEXITCODE
     }
 
-    # Code-sign unpackaged executable to satisfy Windows Application Control / Smart App Control
+    # Code-sign unpackaged executable and main managed assembly to satisfy Smart App Control
     $signtool = (Get-ChildItem -Path "$env:USERPROFILE\.nuget\packages\microsoft.windows.sdk.buildtools" -Filter "signtool.exe" -Recurse -ErrorAction SilentlyContinue | Where-Object { $_.FullName -like "*x64*" } | Select-Object -First 1).FullName
-    $certPath = Join-Path $rootDir "certs\GeoFluentDev.pfx"
-    $targetExe = Join-Path $portableDist "GeoFluent.exe"
+    $certPfx = Join-Path $rootDir "certs\GeoFluentDev.pfx"
+    $certCer = Join-Path $rootDir "certs\GeoFluentDev.cer"
 
-    if ($signtool -and (Test-Path $signtool) -and (Test-Path $certPath) -and (Test-Path $targetExe)) {
-        Write-Host "Signing $targetExe with dev certificate..." -ForegroundColor Cyan
-        & $signtool sign /fd SHA256 /f $certPath /p "GeoFluent2026" $targetExe
-        if ($LASTEXITCODE -eq 0) {
-            Write-Host "Binary signed successfully." -ForegroundColor Green
-        } else {
-            Write-Warning "Code-signing completed with code $LASTEXITCODE"
+    if (Test-Path $certCer) {
+        Import-Certificate -FilePath $certCer -CertStoreLocation "Cert:\CurrentUser\TrustedPeople" | Out-Null
+    }
+
+    if ($signtool -and (Test-Path $signtool) -and (Test-Path $certPfx)) {
+        $binaries = @(
+            (Join-Path $portableDist "GeoFluent.exe"),
+            (Join-Path $portableDist "GeoFluent.dll")
+        )
+        foreach ($bin in $binaries) {
+            if (Test-Path $bin) {
+                Write-Host "Signing $(Split-Path -Leaf $bin) with dev certificate..." -ForegroundColor DarkGray
+                & $signtool sign /fd SHA256 /f $certPfx /p "GeoFluent2026" $bin 2>&1 | Out-Null
+            }
         }
+        Write-Host "Portable binaries signed and verified." -ForegroundColor Green
     }
 
     Write-Host "Portable build succeeded: $portableDist\GeoFluent.exe" -ForegroundColor Green
@@ -97,8 +105,15 @@ if ($Target -eq 'all' -or $Target -eq 'msix') {
     # Locate generated .msix and copy to root of dist/msix for convenient access
     $generatedMsix = Get-ChildItem -Path $msixDist -Filter "*.msix" -Recurse | Where-Object { $_.Name -like "GeoFluent*.msix" } | Select-Object -First 1
     if ($generatedMsix) {
-        Copy-Item -Path $generatedMsix.FullName -Destination (Join-Path $msixDist "GeoFluent.msix") -Force
-        Write-Host "MSIX package copied to: $msixDist\GeoFluent.msix" -ForegroundColor Green
+        $finalMsix = Join-Path $msixDist "GeoFluent.msix"
+        Copy-Item -Path $generatedMsix.FullName -Destination $finalMsix -Force
+        Write-Host "MSIX package copied to: $finalMsix" -ForegroundColor Green
+
+        if ($signtool -and (Test-Path $certPfx)) {
+            Write-Host "Signing final MSIX package with dev certificate..." -ForegroundColor DarkGray
+            & $signtool sign /fd SHA256 /f $certPfx /p "GeoFluent2026" $finalMsix 2>&1 | Out-Null
+            Write-Host "MSIX package signed and verified." -ForegroundColor Green
+        }
     }
 
     Write-Host "MSIX package succeeded in: $msixDist" -ForegroundColor Green

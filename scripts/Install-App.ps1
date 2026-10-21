@@ -14,42 +14,40 @@ Write-Host "==========================================================" -Foregro
 Write-Host ""
 
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+$rootDir = Split-Path -Parent $scriptDir
 
 # 1. Locate certificate
-$certPath = Join-Path $scriptDir "GeoFluentDev.cer"
+$certPath = Join-Path $rootDir "certs\GeoFluentDev.cer"
 if (-not (Test-Path $certPath)) {
-    $certPath = Join-Path (Join-Path $scriptDir "certs") "GeoFluentDev.cer"
+    $certPath = Join-Path $scriptDir "GeoFluentDev.cer"
 }
 
 if (-not (Test-Path $certPath)) {
-    Write-Host "[!] Warning: GeoFluentDev.cer not found in current directory." -ForegroundColor Yellow
+    Write-Host "[!] Warning: GeoFluentDev.cer not found." -ForegroundColor Yellow
 } else {
     Write-Host "[1/2] Installing Publisher Certificate into TrustedPeople store..." -ForegroundColor White
     try {
-        # First attempt LocalMachine (requires admin), then fallback to CurrentUser
-        Import-Certificate -FilePath $certPath -CertStoreLocation "Cert:\LocalMachine\TrustedPeople" -ErrorAction SilentlyContinue | Out-Null
-        Write-Host "      Installed to LocalMachine\TrustedPeople store." -ForegroundColor Green
-    } catch {
         # Fallback to CurrentUser (no elevation required)
         Import-Certificate -FilePath $certPath -CertStoreLocation "Cert:\CurrentUser\TrustedPeople" | Out-Null
         Write-Host "      Installed to CurrentUser\TrustedPeople store." -ForegroundColor Green
+    } catch {
+        Write-Warning "Failed to import certificate: $_"
     }
 }
 
 # 2. Locate MSIX package
-$msix = Get-ChildItem -Path $scriptDir -Filter "*.msix" | Select-Object -First 1
-if (-not $msix) {
-    $msix = Get-ChildItem -Path $scriptDir -Filter "*.appx" | Select-Object -First 1
+$msix = Join-Path $rootDir "dist\msix\GeoFluent.msix"
+if (-not (Test-Path $msix)) {
+    $msix = (Get-ChildItem -Path (Join-Path $rootDir "dist\msix") -Filter "*.msix" -Recurse | Select-Object -First 1).FullName
 }
 
-if (-not $msix) {
-    Write-Host "[!] Error: No .msix or .appx package found in $scriptDir" -ForegroundColor Red
-    Pause
+if (-not $msix -or -not (Test-Path $msix)) {
+    Write-Host "[!] Error: No .msix package found in dist/msix/" -ForegroundColor Red
     exit 1
 }
 
-Write-Host "[2/2] Installing package: $($msix.Name)..." -ForegroundColor White
-Add-AppxPackage -Path $msix.FullName
+Write-Host "[2/2] Installing package: $(Split-Path -Leaf $msix)..." -ForegroundColor White
+Add-AppxPackage -Path $msix -ForceApplicationShutdown
 
 Write-Host ""
 Write-Host "==========================================================" -ForegroundColor Green
