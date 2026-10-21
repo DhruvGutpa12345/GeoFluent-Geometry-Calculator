@@ -4,7 +4,7 @@ namespace GeoFluent;
 
 public partial class App : Application
 {
-    private Window? _mainWindow;
+    public static MainWindow? MainWindowInstance { get; private set; }
 
     public App()
     {
@@ -26,8 +26,8 @@ public partial class App : Application
     {
         try
         {
-            _mainWindow = new MainWindow();
-            _mainWindow.Activate();
+            MainWindowInstance = new MainWindow();
+            MainWindowInstance.Activate();
         }
         catch (Exception ex)
         {

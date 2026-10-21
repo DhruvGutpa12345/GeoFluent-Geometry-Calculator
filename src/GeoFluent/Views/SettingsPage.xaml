@@ -7,21 +7,56 @@
     mc:Ignorable="d">
 
     <ScrollViewer Padding="24">
-        <StackPanel Spacing="20" MaxWidth="960" HorizontalAlignment="Left">
+        <StackPanel Spacing="20" MaxWidth="1020" HorizontalAlignment="Left">
             
             <StackPanel Spacing="4">
                 <TextBlock Text="Settings &amp; About" Style="{ThemeResource TitleLargeTextBlockStyle}" />
-                <TextBlock Text="Application specifications, architecture telemetry, and configuration." Style="{ThemeResource BodyTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                <TextBlock Text="Configure appearance themes, calculation precision, default units, and review architecture metadata." Style="{ThemeResource BodyTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
             </StackPanel>
 
-            <!-- App Specification Card -->
+            <!-- Appearance & Theme Card -->
+            <Border CornerRadius="8" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" Padding="20">
+                <StackPanel Spacing="12">
+                    <TextBlock Text="Appearance &amp; Theme" Style="{ThemeResource SubtitleTextBlockStyle}" />
+                    <TextBlock Text="Select whether to match Windows 11 system theme or enforce Dark or Light Fluent mode." Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+
+                    <RadioButtons x:Name="ThemeRadioGroup" SelectionChanged="ThemeRadioGroup_SelectionChanged" Margin="0,4,0,0">
+                        <RadioButton Content="System Default" Tag="Default" />
+                        <RadioButton Content="Dark Mode (Mica Dark)" Tag="Dark" />
+                        <RadioButton Content="Light Mode (Mica Light)" Tag="Light" />
+                    </RadioButtons>
+                </StackPanel>
+            </Border>
+
+            <!-- Precision & Defaults Card -->
+            <Border CornerRadius="8" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" Padding="20">
+                <StackPanel Spacing="16">
+                    <TextBlock Text="Calculation Precision &amp; Defaults" Style="{ThemeResource SubtitleTextBlockStyle}" />
+
+                    <Grid ColumnDefinitions="240,*" RowDefinitions="Auto,Auto" RowSpacing="12">
+                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Decimal Places Precision:" Style="{ThemeResource BodyTextBlockStyle}" VerticalAlignment="Center" />
+                        <ComboBox Grid.Row="0" Grid.Column="1" x:Name="CmbPrecision" SelectionChanged="CmbPrecision_SelectionChanged" Width="140">
+                            <ComboBoxItem Content="2 Decimals" Tag="2" />
+                            <ComboBoxItem Content="3 Decimals" Tag="3" />
+                            <ComboBoxItem Content="4 Decimals" Tag="4" />
+                            <ComboBoxItem Content="6 Decimals" Tag="6" />
+                            <ComboBoxItem Content="8 Decimals" Tag="8" />
+                        </ComboBox>
+
+                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Default System Units:" Style="{ThemeResource BodyTextBlockStyle}" VerticalAlignment="Center" />
+                        <TextBlock Grid.Row="1" Grid.Column="1" Text="Metric (cm, cm², cm³) with optional Imperial toggles on every field" Style="{ThemeResource BodyStrongTextBlockStyle}" VerticalAlignment="Center" />
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <!-- App Architecture & Store Identity Card -->
             <Border CornerRadius="8" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" Padding="20">
                 <StackPanel Spacing="16">
                     <StackPanel Orientation="Horizontal" Spacing="12">
-                        <FontIcon Glyph="&#xE946;" FontSize="28" Foreground="{ThemeResource AccentFillColorDefaultBrush}" VerticalAlignment="Center" />
+                        <FontIcon Glyph="&#xE946;" FontSize="32" Foreground="{ThemeResource AccentFillColorDefaultBrush}" VerticalAlignment="Center" />
                         <StackPanel>
                             <TextBlock Text="GeoFluent - Geometry Calculator" Style="{ThemeResource SubtitleTextBlockStyle}" />
-                            <TextBlock Text="Windows 11 Native Fluent Desktop Architecture" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            <TextBlock Text="High-Precision Native Windows 11 Fluent 2 Architecture" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                         </StackPanel>
                     </StackPanel>
 
@@ -32,7 +67,7 @@
                         </StackPanel>
 
                         <StackPanel Grid.Row="0" Grid.Column="1">
-                            <TextBlock Text="Target Framework" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            <TextBlock Text="Runtime Target" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                             <TextBlock Text=".NET 10 LTS (net10.0-windows10.0.26100.0)" Style="{ThemeResource BodyStrongTextBlockStyle}" />
                         </StackPanel>
 
@@ -42,28 +77,28 @@
                         </StackPanel>
 
                         <StackPanel Grid.Row="1" Grid.Column="1">
-                            <TextBlock Text="Language Standard" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                            <TextBlock Text="C# 14 with Source Generators" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                            <TextBlock Text="Zero-Bloat Mandate" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            <TextBlock Text="100% Native Compiled UI (Zero Electron, Zero WebView2)" Style="{ThemeResource BodyStrongTextBlockStyle}" Foreground="{ThemeResource SystemFillColorSuccessBrush}" />
                         </StackPanel>
 
                         <StackPanel Grid.Row="2" Grid.Column="0">
-                            <TextBlock Text="Performance Optimization" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                            <TextBlock Text="ReadyToRun &amp; Zero-Allocation Spans" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                            <TextBlock Text="Store Package Identity" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            <TextBlock Text="DhruvGupta.GeoFluent-GeometryCalculator" Style="{ThemeResource BodyStrongTextBlockStyle}" />
                         </StackPanel>
 
                         <StackPanel Grid.Row="2" Grid.Column="1">
-                            <TextBlock Text="Zero-Bloat Mandate" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                            <TextBlock Text="Verified: 0% Electron / 0% WebView2" Style="{ThemeResource BodyStrongTextBlockStyle}" Foreground="{ThemeResource SystemFillColorSuccessBrush}" />
-                        </StackPanel>
-
-                        <StackPanel Grid.Row="3" Grid.Column="0">
-                            <TextBlock Text="Publisher Identity" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            <TextBlock Text="Publisher ID" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                             <TextBlock Text="CN=CB32F928-2859-4967-B8F7-396A9964D1FB" Style="{ThemeResource BodyStrongTextBlockStyle}" />
                         </StackPanel>
 
-                        <StackPanel Grid.Row="3" Grid.Column="1">
+                        <StackPanel Grid.Row="3" Grid.Column="0">
                             <TextBlock Text="License" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                             <TextBlock Text="MIT Open-Source License" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                        </StackPanel>
+
+                        <StackPanel Grid.Row="3" Grid.Column="1">
+                            <TextBlock Text="Store Asset Matrix" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            <TextBlock Text="Custom VectorCraft branding on all device tile sizes" Style="{ThemeResource BodyStrongTextBlockStyle}" />
                         </StackPanel>
                     </Grid>
                 </StackPanel>

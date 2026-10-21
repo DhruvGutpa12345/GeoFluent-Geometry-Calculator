@@ -106,6 +106,26 @@ public static class UnitConverter
         return FromBase(baseVal, toUnitId, type);
     }
 
+    public static string GetDefaultUnitId(UnitType type) => type switch
+    {
+        UnitType.Length => "cm",
+        UnitType.Area => "cm2",
+        UnitType.Volume => "cm3",
+        UnitType.Angle => "deg",
+        _ => ""
+    };
+
+    public static string GetSymbol(string unitId, UnitType type)
+    {
+        var units = GetUnits(type);
+        foreach (var u in units)
+        {
+            if (u.Id.Equals(unitId, StringComparison.OrdinalIgnoreCase))
+                return u.Symbol;
+        }
+        return unitId;
+    }
+
     public static string FormatNumber(double val, int precision = 4)
     {
         if (double.IsNaN(val)) return "—";

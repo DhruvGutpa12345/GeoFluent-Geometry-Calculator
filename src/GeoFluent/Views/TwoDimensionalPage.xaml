@@ -4,97 +4,117 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:math="using:GeoFluent.Math"
     mc:Ignorable="d">
 
     <ScrollViewer Padding="24">
-        <StackPanel Spacing="20" MaxWidth="960" HorizontalAlignment="Left">
+        <StackPanel Spacing="16" MaxWidth="1020" HorizontalAlignment="Left">
             
-            <!-- Page Header -->
-            <StackPanel Spacing="4">
-                <TextBlock Text="2D Plane Shapes" Style="{ThemeResource TitleLargeTextBlockStyle}" />
-                <TextBlock Text="Calculate areas, perimeters, internal angles, radii, and step-by-step mathematical derivations." Style="{ThemeResource BodyTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-            </StackPanel>
-
-            <!-- Shape Selector Card -->
-            <Border CornerRadius="8" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" Padding="16">
-                <StackPanel Orientation="Horizontal" Spacing="16" VerticalAlignment="Center">
-                    <TextBlock Text="Select Shape:" Style="{ThemeResource BodyStrongTextBlockStyle}" VerticalAlignment="Center" />
-                    <ComboBox x:Name="CmbShape" SelectedIndex="0" SelectionChanged="CmbShape_SelectionChanged" Width="220">
-                        <ComboBoxItem Content="Triangle (3 Sides)" Tag="Triangle" />
-                        <ComboBoxItem Content="Rectangle" Tag="Rectangle" />
-                        <ComboBoxItem Content="Square" Tag="Square" />
-                        <ComboBoxItem Content="Circle" Tag="Circle" />
-                        <ComboBoxItem Content="Parallelogram" Tag="Parallelogram" />
-                        <ComboBoxItem Content="Rhombus" Tag="Rhombus" />
-                        <ComboBoxItem Content="Trapezoid" Tag="Trapezoid" />
-                        <ComboBoxItem Content="Regular Polygon" Tag="Polygon" />
-                        <ComboBoxItem Content="Ellipse" Tag="Ellipse" />
-                    </ComboBox>
+            <!-- Page Header with Action Buttons -->
+            <Grid ColumnDefinitions="*,Auto">
+                <StackPanel Spacing="4">
+                    <TextBlock x:Name="TxtHeaderTitle" Text="2D Plane Shapes" Style="{ThemeResource TitleLargeTextBlockStyle}" />
+                    <TextBlock x:Name="TxtHeaderDesc" Text="Comprehensive multi-method geometry calculation with instant derivations." Style="{ThemeResource BodyTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                 </StackPanel>
+                
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                    <Button x:Name="BtnCopyReport" Click="BtnCopyReport_Click" ToolTipService.ToolTip="Copy full formatted calculation report to clipboard">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <FontIcon Glyph="&#xE8C8;" />
+                            <TextBlock Text="Copy Report" />
+                        </StackPanel>
+                    </Button>
+                    <Button x:Name="BtnSaveHistory" Click="BtnSaveHistory_Click" ToolTipService.ToolTip="Save this calculation to history">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <FontIcon Glyph="&#xE74E;" />
+                            <TextBlock Text="Save" />
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </Grid>
+
+            <!-- Shape Search & Selector Card -->
+            <Border CornerRadius="8" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" Padding="16">
+                <Grid ColumnDefinitions="*,Auto,240" ColumnSpacing="16">
+                    <!-- Search Input -->
+                    <TextBox x:Name="TxtSearchShape" PlaceholderText="Search 2D shapes (e.g. Triangle, Circle, Star, Kite)..." TextChanged="TxtSearchShape_TextChanged" VerticalAlignment="Center" />
+
+                    <TextBlock Grid.Column="1" Text="Select Shape:" Style="{ThemeResource BodyStrongTextBlockStyle}" VerticalAlignment="Center" />
+
+                    <!-- Shape Dropdown -->
+                    <ComboBox Grid.Column="2" x:Name="CmbShape" HorizontalAlignment="Stretch" SelectionChanged="CmbShape_SelectionChanged" />
+                </Grid>
             </Border>
 
-            <!-- Parameters Input & Interactive Preview Grid -->
-            <Grid ColumnDefinitions="*,360" ColumnSpacing="20">
+            <!-- Method Selector Card (if multiple methods available) -->
+            <Border x:Name="MethodCard" CornerRadius="8" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" Padding="16">
+                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="16">
+                    <TextBlock Text="Calculation Method:" Style="{ThemeResource BodyStrongTextBlockStyle}" VerticalAlignment="Center" />
+                    <ComboBox Grid.Column="1" x:Name="CmbMethod" HorizontalAlignment="Stretch" SelectionChanged="CmbMethod_SelectionChanged" />
+                    <TextBlock Grid.Column="2" x:Name="TxtMethodDesc" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center" />
+                </Grid>
+            </Border>
+
+            <!-- Main Work Area: Parameters & Interactive 2D Visualizer -->
+            <Grid ColumnDefinitions="*,400" ColumnSpacing="20">
                 <!-- Input Parameters Card -->
                 <Border Grid.Column="0" CornerRadius="8" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" Padding="20">
                     <StackPanel Spacing="16">
                         <TextBlock Text="Input Parameters" Style="{ThemeResource SubtitleTextBlockStyle}" />
-                        
+
+                        <!-- Dynamic Input Rows with Per-Input Units -->
                         <StackPanel x:Name="InputsPanel" Spacing="12" />
 
-                        <Button x:Name="BtnCalculate" Content="Calculate" Style="{ThemeResource AccentButtonStyle}" Click="BtnCalculate_Click" Width="140" HorizontalAlignment="Left" />
-                        
+                        <StackPanel Orientation="Horizontal" Spacing="12">
+                            <Button x:Name="BtnCalculate" Content="Recalculate" Style="{ThemeResource AccentButtonStyle}" Click="BtnCalculate_Click" Width="130" />
+                            <CheckBox x:Name="ChkAutoCalc" Content="Auto-calculate on change" IsChecked="True" VerticalAlignment="Center" />
+                        </StackPanel>
+
                         <InfoBar x:Name="ErrorBar" IsOpen="False" Severity="Error" Title="Calculation Error" Message="" />
+                        <InfoBar x:Name="ToastBar" IsOpen="False" Severity="Success" Title="Success" Message="" />
                     </StackPanel>
                 </Border>
 
-                <!-- 2D Geometry Visualizer Canvas -->
-                <Border Grid.Column="1" CornerRadius="8" Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" Padding="16" Height="260">
-                    <Grid>
-                        <TextBlock Text="Shape Geometry Canvas" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Top" HorizontalAlignment="Left" />
-                        <Canvas x:Name="GeometryCanvas" Width="280" Height="200" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                <!-- Interactive 2D Geometry Visualizer -->
+                <Border Grid.Column="1" CornerRadius="8" Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" Padding="16">
+                    <Grid RowDefinitions="Auto,*,Auto">
+                        <StackPanel Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Stretch" Margin="0,0,0,8">
+                            <TextBlock Text="2D Shape Geometry Canvas" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center" />
+                            <CheckBox x:Name="ChkShowGuides" Content="Guides" IsChecked="True" Margin="16,0,0,0" Checked="ChkShowGuides_Toggled" Unchecked="ChkShowGuides_Toggled" />
+                        </StackPanel>
+
+                        <!-- Canvas Host with Clip to bounds -->
+                        <Border Grid.Row="1" Background="{ThemeResource SubtleFillColorTransparentBrush}" Height="240" CornerRadius="4">
+                            <Canvas x:Name="GeometryCanvas" Width="360" Height="240" />
+                        </Border>
+
+                        <TextBlock Grid.Row="2" x:Name="TxtCanvasInfo" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorTertiaryBrush}" HorizontalAlignment="Center" Margin="0,6,0,0" />
                     </Grid>
                 </Border>
             </Grid>
 
-            <!-- Results Card -->
+            <!-- Results Card with Unit Formatting -->
             <Border x:Name="ResultsCard" CornerRadius="8" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" Padding="20" Visibility="Collapsed">
                 <StackPanel Spacing="16">
-                    <TextBlock Text="Calculation Outputs" Style="{ThemeResource SubtitleTextBlockStyle}" />
+                    <Grid ColumnDefinitions="*,Auto">
+                        <TextBlock Text="Calculated Geometric Properties" Style="{ThemeResource SubtitleTextBlockStyle}" VerticalAlignment="Center" />
+                        
+                        <!-- Output Units Customizer -->
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                            <TextBlock Text="Display Units:" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center" />
+                            <ComboBox x:Name="CmbOutputLengthUnit" Width="100" SelectionChanged="CmbOutputUnit_SelectionChanged" />
+                            <ComboBox x:Name="CmbOutputAreaUnit" Width="100" SelectionChanged="CmbOutputUnit_SelectionChanged" />
+                        </StackPanel>
+                    </Grid>
 
-                    <ItemsControl x:Name="OutputsList">
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate x:DataType="math:CalculationOutput">
-                                <Grid Margin="0,4" ColumnDefinitions="200,*,Auto">
-                                    <TextBlock Text="{x:Bind Label}" Style="{ThemeResource BodyTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center" />
-                                    <TextBlock Grid.Column="1" Text="{x:Bind DisplayValue}" Style="{ThemeResource BodyStrongTextBlockStyle}" VerticalAlignment="Center" />
-                                    <Border Grid.Column="2" CornerRadius="4" Background="{ThemeResource SubtleFillColorSecondaryBrush}" Padding="6,2">
-                                        <TextBlock Text="{x:Bind Symbol}" Style="{ThemeResource CaptionTextBlockStyle}" />
-                                    </Border>
-                                </Grid>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
+                    <StackPanel x:Name="OutputsPanel" Spacing="8" />
                 </StackPanel>
             </Border>
 
-            <!-- Mathematical Steps Card -->
+            <!-- Step-by-Step Mathematical Derivation Card -->
             <Border x:Name="StepsCard" CornerRadius="8" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" Padding="20" Visibility="Collapsed">
                 <StackPanel Spacing="16">
-                    <TextBlock Text="Step-by-Step Derivation" Style="{ThemeResource SubtitleTextBlockStyle}" />
-
-                    <ItemsControl x:Name="StepsList">
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate x:DataType="math:CalculationStep">
-                                <StackPanel Margin="0,8" Spacing="4">
-                                    <TextBlock Text="{x:Bind Title}" Style="{ThemeResource BodyStrongTextBlockStyle}" Foreground="{ThemeResource AccentFillColorDefaultBrush}" />
-                                    <TextBlock Text="{x:Bind Formula}" Style="{ThemeResource CaptionTextBlockStyle}" FontFamily="Consolas, Cascadia Code" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                                    <TextBlock Text="{x:Bind Substitution}" Style="{ThemeResource BodyTextBlockStyle}" FontFamily="Consolas, Cascadia Code" />
-                                </StackPanel>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
+                    <TextBlock Text="Step-by-Step Derivations &amp; Formulas" Style="{ThemeResource SubtitleTextBlockStyle}" />
+                    <StackPanel x:Name="StepsPanel" Spacing="12" />
                 </StackPanel>
             </Border>
 

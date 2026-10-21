@@ -16,6 +16,9 @@ public sealed partial class MainWindow : Window
             ExtendsContentIntoTitleBar = true;
             SetTitleBar(AppTitleBar);
 
+            // Sync navigation selection when Frame navigates
+            ContentFrame.Navigated += ContentFrame_Navigated;
+
             // Navigate to default page
             ContentFrame.Navigate(typeof(TwoDimensionalPage));
         }
@@ -47,7 +50,38 @@ public sealed partial class MainWindow : Window
                 _ => typeof(TwoDimensionalPage)
             };
 
-            ContentFrame.Navigate(pageType);
+            if (ContentFrame.CurrentSourcePageType != pageType)
+            {
+                ContentFrame.Navigate(pageType);
+            }
+        }
+    }
+
+    private void ContentFrame_Navigated(object sender, Microsoft.UI.Xaml.Navigation.NavigationEventArgs e)
+    {
+        if (e.SourcePageType == typeof(SettingsPage))
+        {
+            NavView.SelectedItem = NavView.SettingsItem;
+        }
+        else
+        {
+            string tag = e.SourcePageType switch
+            {
+                var t when t == typeof(TwoDimensionalPage) => "2D",
+                var t when t == typeof(ThreeDimensionalPage) => "3D",
+                var t when t == typeof(UnitConverterPage) => "Converter",
+                var t when t == typeof(HistoryPage) => "History",
+                _ => "2D"
+            };
+
+            foreach (var item in NavView.MenuItems)
+            {
+                if (item is NavigationViewItem nvi && nvi.Tag?.ToString() == tag)
+                {
+                    NavView.SelectedItem = nvi;
+                    break;
+                }
+            }
         }
     }
 }

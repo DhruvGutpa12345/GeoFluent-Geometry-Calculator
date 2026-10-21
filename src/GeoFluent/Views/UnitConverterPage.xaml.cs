@@ -1,13 +1,16 @@
 using System.Globalization;
 using GeoFluent.Math;
+using GeoFluent.Services;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Windows.ApplicationModel.DataTransfer;
 
 namespace GeoFluent.Views;
 
 public sealed partial class UnitConverterPage : Page
 {
     private bool _isUpdating;
+    private UnitType _activeCategory = UnitType.Length;
 
     public UnitConverterPage()
     {
@@ -15,10 +18,24 @@ public sealed partial class UnitConverterPage : Page
         Loaded += (s, e) => PopulateUnits();
     }
 
-    private void CmbCategory_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    private void BtnCat_Click(object sender, RoutedEventArgs e)
     {
-        if (IsLoaded)
+        if (sender is Button btn && btn.Tag is string tag)
         {
+            _activeCategory = tag switch
+            {
+                "Area" => UnitType.Area,
+                "Volume" => UnitType.Volume,
+                "Angle" => UnitType.Angle,
+                _ => UnitType.Length
+            };
+
+            // Update pill button styles
+            BtnCatLength.Style = _activeCategory == UnitType.Length ? (Style)Application.Current.Resources["AccentButtonStyle"] : (Style)Application.Current.Resources["DefaultButtonStyle"];
+            BtnCatArea.Style = _activeCategory == UnitType.Area ? (Style)Application.Current.Resources["AccentButtonStyle"] : (Style)Application.Current.Resources["DefaultButtonStyle"];
+            BtnCatVolume.Style = _activeCategory == UnitType.Volume ? (Style)Application.Current.Resources["AccentButtonStyle"] : (Style)Application.Current.Resources["DefaultButtonStyle"];
+            BtnCatAngle.Style = _activeCategory == UnitType.Angle ? (Style)Application.Current.Resources["AccentButtonStyle"] : (Style)Application.Current.Resources["DefaultButtonStyle"];
+
             PopulateUnits();
         }
     }
@@ -29,13 +46,12 @@ public sealed partial class UnitConverterPage : Page
         CmbFromUnit.Items.Clear();
         CmbToUnit.Items.Clear();
 
-        UnitType category = GetCurrentCategory();
-        var units = UnitConverter.GetUnits(category);
+        var units = UnitConverter.GetUnits(_activeCategory);
 
         foreach (var u in units)
         {
-            CmbFromUnit.Items.Add(new ComboBoxItem { Content = u.Name, Tag = u.Id });
-            CmbToUnit.Items.Add(new ComboBoxItem { Content = u.Name, Tag = u.Id });
+            CmbFromUnit.Items.Add(new ComboBoxItem { Content = $"{u.Name} [{u.Symbol}]", Tag = u.Id });
+            CmbToUnit.Items.Add(new ComboBoxItem { Content = $"{u.Name} [{u.Symbol}]", Tag = u.Id });
         }
 
         if (CmbFromUnit.Items.Count > 0) CmbFromUnit.SelectedIndex = 0;
@@ -44,18 +60,6 @@ public sealed partial class UnitConverterPage : Page
 
         _isUpdating = false;
         PerformConversion();
-    }
-
-    private UnitType GetCurrentCategory()
-    {
-        string tag = (CmbCategory.SelectedItem as ComboBoxItem)?.Tag?.ToString() ?? "Length";
-        return tag switch
-        {
-            "Area" => UnitType.Area,
-            "Volume" => UnitType.Volume,
-            "Angle" => UnitType.Angle,
-            _ => UnitType.Length
-        };
     }
 
     private void CmbFromUnit_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -91,18 +95,36 @@ public sealed partial class UnitConverterPage : Page
 
         string fromId = fromItem.Tag?.ToString() ?? "";
         string toId = toItem.Tag?.ToString() ?? "";
-        UnitType type = GetCurrentCategory();
 
         if (double.TryParse(TxtFromValue.Text, NumberStyles.Float, CultureInfo.InvariantCulture, out double val))
         {
-            double converted = UnitConverter.Convert(val, fromId, toId, type);
-            TxtToValue.Text = UnitConverter.FormatNumber(converted, 6);
-            TxtConversionFormula.Text = $"{val} {fromId} = {TxtToValue.Text} {toId}";
+            double converted = UnitConverter.Convert(val, fromId, toId, _activeCategory);
+            string formatted = UnitConverter.FormatNumber(converted, UserSettingsService.Precision);
+            string fromSym = UnitConverter.GetSymbol(fromId, _activeCategory);
+            string toSym = UnitConverter.GetSymbol(toId, _activeCategory);
+
+            TxtToValue.Text = formatted;
+            TxtConversionFormula.Text = $"{val} {fromSym} = {formatted} {toSym}";
         }
         else
         {
             TxtToValue.Text = "—";
             TxtConversionFormula.Text = "";
         }
+    }
+
+    private void BtnCopyResult_Click(object sender, RoutedEventArgs e)
+    {
+        if (string.IsNullOrWhiteSpace(TxtToValue.Text) || TxtToValue.Text == "—") return;
+        string toId = (CmbToUnit.SelectedItem as ComboBoxItem)?.Tag?.ToString() ?? "";
+        string toSym = UnitConverter.GetSymbol(toId, _activeCategory);
+        string textToCopy = $"{TxtToValue.Text} {toSym}";
+
+        var pkg = new DataPackage();
+        pkg.SetText(textToCopy);
+        Clipboard.SetContent(pkg);
+
+        ToastBar.Message = $"Copied '{textToCopy}' to clipboard!";
+        ToastBar.IsOpen = true;
     }
 }

@@ -7,53 +7,60 @@
     mc:Ignorable="d">
 
     <ScrollViewer Padding="24">
-        <StackPanel Spacing="20" MaxWidth="960" HorizontalAlignment="Left">
+        <StackPanel Spacing="20" MaxWidth="1020" HorizontalAlignment="Left">
             
             <StackPanel Spacing="4">
-                <TextBlock Text="Unit Converter" Style="{ThemeResource TitleLargeTextBlockStyle}" />
-                <TextBlock Text="High-precision conversion across Metric and Imperial length, area, volume, and angle units." Style="{ThemeResource BodyTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                <TextBlock Text="Universal Unit Converter" Style="{ThemeResource TitleLargeTextBlockStyle}" />
+                <TextBlock Text="Convert between any length, area, volume, or angle units with real-time bidirectional calculation." Style="{ThemeResource BodyTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
             </StackPanel>
 
-            <!-- Unit Type Selector -->
+            <!-- Unit Category Quick Pills -->
             <Border CornerRadius="8" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" Padding="16">
-                <StackPanel Orientation="Horizontal" Spacing="16" VerticalAlignment="Center">
-                    <TextBlock Text="Unit Category:" Style="{ThemeResource BodyStrongTextBlockStyle}" VerticalAlignment="Center" />
-                    <ComboBox x:Name="CmbCategory" SelectedIndex="0" SelectionChanged="CmbCategory_SelectionChanged" Width="200">
-                        <ComboBoxItem Content="Length" Tag="Length" />
-                        <ComboBoxItem Content="Area" Tag="Area" />
-                        <ComboBoxItem Content="Volume" Tag="Volume" />
-                        <ComboBoxItem Content="Angle" Tag="Angle" />
-                    </ComboBox>
+                <StackPanel Orientation="Horizontal" Spacing="12">
+                    <Button x:Name="BtnCatLength" Content="Length" Click="BtnCat_Click" Tag="Length" Style="{ThemeResource AccentButtonStyle}" />
+                    <Button x:Name="BtnCatArea" Content="Area" Click="BtnCat_Click" Tag="Area" />
+                    <Button x:Name="BtnCatVolume" Content="Volume" Click="BtnCat_Click" Tag="Volume" />
+                    <Button x:Name="BtnCatAngle" Content="Angle" Click="BtnCat_Click" Tag="Angle" />
                 </StackPanel>
             </Border>
 
+            <InfoBar x:Name="ToastBar" IsOpen="False" Severity="Success" Title="Converter" Message="" />
+
             <!-- Conversion Card -->
-            <Border CornerRadius="8" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" Padding="20">
-                <StackPanel Spacing="16">
+            <Border CornerRadius="8" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" Padding="24">
+                <StackPanel Spacing="20">
                     <TextBlock Text="Convert Values" Style="{ThemeResource SubtitleTextBlockStyle}" />
 
-                    <Grid ColumnDefinitions="*,Auto,*" ColumnSpacing="16">
+                    <Grid ColumnDefinitions="*,Auto,*" ColumnSpacing="20">
                         <!-- From Section -->
                         <StackPanel Grid.Column="0" Spacing="8">
-                            <TextBlock Text="From:" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            <TextBlock Text="From Quantity &amp; Unit:" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            <TextBox x:Name="TxtFromValue" Text="100" TextChanged="TxtFromValue_TextChanged" />
                             <ComboBox x:Name="CmbFromUnit" HorizontalAlignment="Stretch" SelectionChanged="CmbFromUnit_SelectionChanged" />
-                            <TextBox x:Name="TxtFromValue" Text="1" TextChanged="TxtFromValue_TextChanged" />
                         </StackPanel>
 
                         <!-- Swap Button -->
-                        <Button Grid.Column="1" VerticalAlignment="Bottom" Margin="0,0,0,4" Click="BtnSwap_Click">
+                        <Button Grid.Column="1" VerticalAlignment="Center" Click="BtnSwap_Click" ToolTipService.ToolTip="Swap Units" Padding="12,10">
                             <FontIcon Glyph="&#xE8AB;" />
                         </Button>
 
                         <!-- To Section -->
                         <StackPanel Grid.Column="2" Spacing="8">
-                            <TextBlock Text="To:" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            <Grid ColumnDefinitions="*,Auto">
+                                <TextBlock Text="Converted Result:" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center" />
+                                <Button Grid.Column="1" Content="Copy" Click="BtnCopyResult_Click" Padding="8,2" />
+                            </Grid>
+                            <TextBox x:Name="TxtToValue" IsReadOnly="True" Style="{ThemeResource BodyStrongTextBlockStyle}" />
                             <ComboBox x:Name="CmbToUnit" HorizontalAlignment="Stretch" SelectionChanged="CmbToUnit_SelectionChanged" />
-                            <TextBox x:Name="TxtToValue" IsReadOnly="True" />
                         </StackPanel>
                     </Grid>
 
-                    <TextBlock x:Name="TxtConversionFormula" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    <Border CornerRadius="6" Background="{ThemeResource SubtleFillColorSecondaryBrush}" Padding="16,12">
+                        <StackPanel Spacing="4">
+                            <TextBlock Text="Conversion Formula Equivalence:" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            <TextBlock x:Name="TxtConversionFormula" Style="{ThemeResource BodyStrongTextBlockStyle}" FontFamily="Consolas, Cascadia Code" Foreground="{ThemeResource AccentFillColorDefaultBrush}" />
+                        </StackPanel>
+                    </Border>
                 </StackPanel>
             </Border>
 
